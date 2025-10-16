@@ -276,14 +276,14 @@ AI-based-pump-health-monitoring-tool/
 - ✅ Example notebooks
 
 ### Future Enhancements
-- 🔲 Real-time streaming data integration
-- 🔲 Advanced deep learning models (LSTM, Transformer)
-- 🔲 API endpoints for external integration
-- 🔲 Mobile app for monitoring
-- 🔲 Email/SMS alerting system
-- 🔲 Multi-user authentication
-- 🔲 Database integration (PostgreSQL/TimescaleDB)
-- 🔲 Automated model retraining
+- [ ] Real-time streaming data integration
+- [ ] Advanced deep learning models (LSTM, Transformer)
+- [ ] API endpoints for external integration
+- [ ] Mobile app for monitoring
+- [ ] Email/SMS alerting system
+- [ ] Multi-user authentication
+- [ ] Database integration (PostgreSQL/TimescaleDB)
+- [ ] Automated model retraining
 
 ## 📊 Performance Benchmarks
 
