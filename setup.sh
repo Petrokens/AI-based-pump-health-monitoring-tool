@@ -1,20 +1,38 @@
 #!/bin/bash
-# Setup script for Pump Health Monitoring Tool
+# Setup script for Pump Health Monitoring Tool (Unix/Linux/macOS)
+# For Windows, see QUICKSTART.md for manual setup instructions
 
 echo "======================================"
 echo "Pump Health Monitoring Tool - Setup"
 echo "======================================"
 echo ""
 
+# Detect OS
+OS="$(uname -s)"
+case "${OS}" in
+    Linux*|Darwin*)
+        echo "Detected OS: ${OS}"
+        ;;
+    MINGW*|MSYS*|CYGWIN*)
+        echo "⚠️  Windows detected. Please use manual setup from QUICKSTART.md"
+        exit 1
+        ;;
+    *)
+        echo "⚠️  Unknown OS: ${OS}"
+        echo "Continuing with Unix-like setup..."
+        ;;
+esac
+echo ""
+
 # Check Python version
 echo "[1/5] Checking Python version..."
-python_version=$(python3 --version 2>&1 | awk '{print $2}')
-echo "Python version: $python_version"
-
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python 3 is not installed. Please install Python 3.8 or higher."
     exit 1
 fi
+
+python_version=$(python3 --version 2>&1 | awk '{print $2}')
+echo "Python version: $python_version"
 echo "✅ Python found"
 echo ""
 
@@ -43,7 +61,7 @@ echo ""
 
 # Run main pipeline
 echo "[5/5] Running initial setup (generating data and training models)..."
-python main.py
+python3 main.py
 echo ""
 
 echo "======================================"

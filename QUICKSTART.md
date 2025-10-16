@@ -18,14 +18,28 @@ cd AI-based-pump-health-monitoring-tool
 
 ### 2. Create Virtual Environment (Recommended)
 ```bash
+# On Linux/macOS:
+python3 -m venv venv
+source venv/bin/activate
+
+# On Windows:
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+venv\Scripts\activate
 ```
 
 ### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
+
+**Note:** On Unix-like systems (Linux/macOS), you can run the automated setup script:
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+This will create the virtual environment, install dependencies, and run the initial setup automatically.
+
+**Windows users:** Please follow the manual steps above as the setup.sh script is for Unix-like systems only.
 
 ## Running the System
 
