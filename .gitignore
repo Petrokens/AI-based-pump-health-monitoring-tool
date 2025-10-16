@@ -138,5 +138,8 @@ models/*.pkl
 models/*.joblib
 data/raw/*.csv
 data/processed/*.csv
+
+# Exclude images except preview images
 *.png
+!dashboard_preview.png
 *.jpg
