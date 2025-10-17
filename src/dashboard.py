@@ -121,7 +121,7 @@ try:
     elif latest_record['health_index'] < 85:
         st.warning("⚠️ Monitor closely - schedule maintenance within 30 days")
     else:
-        st.success("✅ Pump operating normally - no immediate action required")
+        st.success("Pump operating normally - no immediate action required")
     
     # Time series charts
     st.subheader("Performance Trends")
