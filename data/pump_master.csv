@@ -1,0 +1,4 @@
+pump_id,model,rated_flow_m3h,rated_head_m, rated_power_kw, impeller_dia_mm, vendor, head_curve_flow, head_curve_head, eff_curve_flow, eff_curve_eff, fluid_density
+P-101,XYZ,150,45,55,300,MyVendor,"[0,50,100,150]","[0,60,50,30]","[0,50,100,150]","[20,60,70,65]",1000
+P-102,ABC,120,30,40,250,AnotherVendor,"[0,40,80,120]","[0,40,35,20]","[0,40,80,120]","[25,55,65,60]",1000
+P-103,DEF,200,60,75,350,ThirdVendor,"[0,70,140,200]","[0,70,60,40]","[0,70,140,200]","[15,50,60,55]",1000   

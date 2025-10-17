@@ -1,0 +1,119 @@
+{
+  "P-101": {
+    "pump_id": "P-101",
+    "model": "XYZ",
+    "rated_flow_m3h": 150,
+    "rated_head_m": 45,
+    " rated_power_kw": 55,
+    " impeller_dia_mm": 300,
+    " vendor": "MyVendor",
+    " head_curve_flow": "[0,50,100,150]",
+    " head_curve_head": "[0,60,50,30]",
+    " eff_curve_flow": "[0,50,100,150]",
+    " eff_curve_eff": "[20,60,70,65]",
+    " fluid_density": 1000,
+    "head_flow": [
+      0,
+      50,
+      100,
+      150
+    ],
+    "head_head": [
+      0,
+      60,
+      50,
+      30
+    ],
+    "eff_flow": [
+      0,
+      50,
+      100,
+      150
+    ],
+    "eff_eff": [
+      20,
+      60,
+      70,
+      65
+    ],
+    "fluid_density": 1000.0
+  },
+  "P-102": {
+    "pump_id": "P-102",
+    "model": "ABC",
+    "rated_flow_m3h": 120,
+    "rated_head_m": 30,
+    " rated_power_kw": 40,
+    " impeller_dia_mm": 250,
+    " vendor": "AnotherVendor",
+    " head_curve_flow": "[0,40,80,120]",
+    " head_curve_head": "[0,40,35,20]",
+    " eff_curve_flow": "[0,40,80,120]",
+    " eff_curve_eff": "[25,55,65,60]",
+    " fluid_density": 1000,
+    "head_flow": [
+      0,
+      40,
+      80,
+      120
+    ],
+    "head_head": [
+      0,
+      40,
+      35,
+      20
+    ],
+    "eff_flow": [
+      0,
+      40,
+      80,
+      120
+    ],
+    "eff_eff": [
+      25,
+      55,
+      65,
+      60
+    ],
+    "fluid_density": 1000.0
+  },
+  "P-103": {
+    "pump_id": "P-103",
+    "model": "DEF",
+    "rated_flow_m3h": 200,
+    "rated_head_m": 60,
+    " rated_power_kw": 75,
+    " impeller_dia_mm": 350,
+    " vendor": "ThirdVendor",
+    " head_curve_flow": "[0,70,140,200]",
+    " head_curve_head": "[0,70,60,40]",
+    " eff_curve_flow": "[0,70,140,200]",
+    " eff_curve_eff": "[15,50,60,55]",
+    " fluid_density": 1000,
+    "head_flow": [
+      0,
+      70,
+      140,
+      200
+    ],
+    "head_head": [
+      0,
+      70,
+      60,
+      40
+    ],
+    "eff_flow": [
+      0,
+      70,
+      140,
+      200
+    ],
+    "eff_eff": [
+      15,
+      50,
+      60,
+      55
+    ],
+    "fluid_density": 1000.0
+  }
+}
