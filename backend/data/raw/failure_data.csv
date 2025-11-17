@@ -1,9 +1,19 @@
 failure_date,pump_id,failure_mode,root_cause,parts_replaced,downtime_hours,cost_usd
-2025-05-28,P-105,coupling,Coupling failure,Coupling assembly,9,2245
-2025-06-05,P-112,bearing,Bearing wear due to insufficient lubrication,Bearing assembly,10,3811
-2025-06-07,P-112,motor,Motor winding failure,Motor winding / Motor assembly,16,8816
-2025-08-22,P-103,bearing,Bearing contamination,Bearing assembly,9,3323
-2025-08-26,P-102,coupling,Coupling failure,Coupling assembly,8,3058
-2025-09-22,P-102,motor,Motor insulation breakdown,Motor winding / Motor assembly,16,7884
-2025-09-25,P-107,motor,Motor bearing failure,Motor winding / Motor assembly,13,5343
-2025-10-05,P-109,motor,Motor insulation breakdown,Motor winding / Motor assembly,12,6058
+2027-05-17,PU-207F,impeller,cavitation damage,Impeller casting,14,7016
+2027-06-10,PU-212L,vibration,overheating,Sensor package,13,5323
+2027-06-29,PU-207F,electrical,abrasive ingress,VFD module,17,4952
+2027-07-25,PU-206E,coupling,lubrication loss,Flexible coupling,8,4435
+2027-07-30,PU-205D,vibration,overheating,Sensor package,19,10504
+2027-08-15,PU-201A,seal,process upset,Mechanical seal kit,12,6390
+2027-08-16,PU-209H,electrical,winding insulation breakdown,VFD module,14,9752
+2027-08-21,PU-202B,electrical,cavitation damage,VFD module,9,5425
+2027-08-27,PU-211K,coupling,alignment drift,Flexible coupling,15,5799
+2027-09-02,PU-201A,impeller,cavitation damage,Impeller casting,16,8763
+2027-09-07,PU-207F,vibration,alignment drift,Sensor package,13,10549
+2027-09-20,PU-204A,vibration,lubrication loss,Sensor package,13,4292
+2027-10-02,PU-204A,impeller,abrasive ingress,Impeller casting,10,6770
+2027-11-09,PU-204A,vibration,winding insulation breakdown,Sensor package,10,9473
+2027-11-10,PU-208G,coupling,process upset,Flexible coupling,17,10507
+2027-11-12,PU-210J,impeller,overheating,Impeller casting,6,10922
+2027-11-14,PU-210J,electrical,lubrication loss,VFD module,19,10414
+2027-11-16,PU-209H,impeller,winding insulation breakdown,Impeller casting,9,5449
