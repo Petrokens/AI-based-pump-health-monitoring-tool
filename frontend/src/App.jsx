@@ -45,10 +45,12 @@ function App() {
       const data = await fetchPumps();
       if (data && data.length > 0) {
         setPumps(data);
-        // Auto-select first pump if current selection not available
-        if (!data.find(p => p.id === selectedPump)) {
-          setSelectedPump(data[0].id);
-        }
+        setSelectedPump(prevSelected => {
+          if (prevSelected && data.find(p => p.id === prevSelected)) {
+            return prevSelected;
+          }
+          return data[0].id;
+        });
       } else {
         setError('No pump data available');
       }
