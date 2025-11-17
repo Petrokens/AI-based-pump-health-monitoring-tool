@@ -55,7 +55,7 @@ function App() {
       setLoading(false);
     } catch (error) {
       console.error('Error loading pumps:', error);
-      setError(error.response?.data?.error || error.message || 'Failed to connect to backend. Please ensure the backend server is running on http://localhost:5000');
+      setError(error.response?.data?.error || error.message || 'Failed to connect to backend. Please check your backend server configuration.');
       setLoading(false);
     }
   };

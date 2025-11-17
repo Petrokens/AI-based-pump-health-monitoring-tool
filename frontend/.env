@@ -1,0 +1,35 @@
+# Environment Variables Setup
+
+## Production (Netlify)
+
+The environment variable is already configured in `netlify.toml`:
+```
+VITE_API_BASE_URL=https://ai-based-pump-health-monitoring-tool.onrender.com/api
+```
+
+## Local Development
+
+For local development, create a `.env` file in the `frontend` directory:
+
+### Option 1: Use Vite Proxy (Recommended for local dev)
+Create `frontend/.env` with:
+```env
+# Leave empty to use Vite proxy (http://localhost:5000)
+VITE_API_BASE_URL=
+```
+
+The Vite proxy in `vite.config.js` will handle `/api` requests and forward them to `http://localhost:5000`.
+
+### Option 2: Direct Backend URL
+If you want to test against the production backend:
+```env
+VITE_API_BASE_URL=https://ai-based-pump-health-monitoring-tool.onrender.com/api
+```
+
+## Notes
+
+- `.env` files are gitignored (not committed to repository)
+- Environment variables prefixed with `VITE_` are exposed to the frontend code
+- The API service in `src/services/api.js` uses: `import.meta.env.VITE_API_BASE_URL || '/api'`
+- If `VITE_API_BASE_URL` is not set, it defaults to `/api` (relative path for Vite proxy)
+

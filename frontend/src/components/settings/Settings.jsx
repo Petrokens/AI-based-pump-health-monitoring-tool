@@ -63,7 +63,7 @@ const Settings = () => {
     },
     // API Settings
     api: {
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'https://ai-based-pump-health-monitoring-tool.onrender.com/api',
       timeout: 10000,
       retryAttempts: 3,
     }
@@ -528,7 +528,7 @@ const Settings = () => {
                         value={settings.api.baseUrl}
                         onChange={(e) => updateSetting('api', 'baseUrl', e.target.value)}
                         className="w-full bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="http://localhost:5000"
+                        placeholder="https://ai-based-pump-health-monitoring-tool.onrender.com/api"
                       />
                     </div>
                     <div className="bg-slate-700/50 rounded-lg p-4">
