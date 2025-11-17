@@ -1,19 +1,19 @@
 failure_date,pump_id,failure_mode,root_cause,parts_replaced,downtime_hours,cost_usd
-2027-05-17,PU-207F,impeller,cavitation damage,Impeller casting,14,7016
-2027-06-10,PU-212L,vibration,overheating,Sensor package,13,5323
-2027-06-29,PU-207F,electrical,abrasive ingress,VFD module,17,4952
-2027-07-25,PU-206E,coupling,lubrication loss,Flexible coupling,8,4435
-2027-07-30,PU-205D,vibration,overheating,Sensor package,19,10504
-2027-08-15,PU-201A,seal,process upset,Mechanical seal kit,12,6390
-2027-08-16,PU-209H,electrical,winding insulation breakdown,VFD module,14,9752
-2027-08-21,PU-202B,electrical,cavitation damage,VFD module,9,5425
-2027-08-27,PU-211K,coupling,alignment drift,Flexible coupling,15,5799
-2027-09-02,PU-201A,impeller,cavitation damage,Impeller casting,16,8763
-2027-09-07,PU-207F,vibration,alignment drift,Sensor package,13,10549
-2027-09-20,PU-204A,vibration,lubrication loss,Sensor package,13,4292
-2027-10-02,PU-204A,impeller,abrasive ingress,Impeller casting,10,6770
-2027-11-09,PU-204A,vibration,winding insulation breakdown,Sensor package,10,9473
-2027-11-10,PU-208G,coupling,process upset,Flexible coupling,17,10507
-2027-11-12,PU-210J,impeller,overheating,Impeller casting,6,10922
-2027-11-14,PU-210J,electrical,lubrication loss,VFD module,19,10414
-2027-11-16,PU-209H,impeller,winding insulation breakdown,Impeller casting,9,5449
+2027-05-24,PU-205D,motor,winding insulation breakdown,Motor stator,12,4638
+2027-05-25,PU-211K,electrical,lubrication loss,VFD module,10,9660
+2027-05-30,PU-208G,bearing,abrasive ingress,Bearing cartridge,18,5048
+2027-06-21,PU-203C,vibration,alignment drift,Sensor package,20,6197
+2027-07-13,PU-204A,coupling,process upset,Flexible coupling,11,4994
+2027-07-31,PU-210J,motor,winding insulation breakdown,Motor stator,10,3379
+2027-08-07,PU-208G,bearing,abrasive ingress,Bearing cartridge,12,7885
+2027-08-21,PU-201A,coupling,cavitation damage,Flexible coupling,17,4276
+2027-08-22,PU-206E,coupling,cavitation damage,Flexible coupling,16,6675
+2027-08-28,PU-205D,electrical,alignment drift,VFD module,8,3805
+2027-09-01,PU-205D,electrical,process upset,VFD module,11,9788
+2027-09-13,PU-209H,motor,process upset,Motor stator,8,5305
+2027-10-10,PU-204A,coupling,cavitation damage,Flexible coupling,16,9389
+2027-10-11,PU-205D,impeller,cavitation damage,Impeller casting,16,3276
+2027-10-16,PU-207F,motor,lubrication loss,Motor stator,15,10286
+2027-10-23,PU-212L,bearing,alignment drift,Bearing cartridge,17,7269
+2027-10-24,PU-205D,impeller,process upset,Impeller casting,10,4831
+2027-11-01,PU-211K,electrical,process upset,VFD module,8,8346
