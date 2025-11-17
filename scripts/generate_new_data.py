@@ -151,7 +151,7 @@ def build_pump_catalog() -> List[dict]:
 
 def render_pump_master(pumps: List[dict]) -> None:
     path = BASE_DIR / "pump_master.csv"
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(
             [
@@ -248,7 +248,7 @@ def build_maintenance_log(pumps: List[dict]) -> None:
             notes=[
                 "Laser alignment with Fixturlaser XA (within 0.05 mm)",
                 "Cartridge seal faces dressed and leak-tested",
-                "Thrust bearing temperature trending 3°C high",
+                "Thrust bearing temperature trending 3 degC high",
                 "Coupling elastomer spider swapped due to cracks",
             ],
         ),
@@ -261,7 +261,7 @@ def build_maintenance_log(pumps: List[dict]) -> None:
                 "Motor insulation DAR ratio recorded 1.6 (acceptable)",
                 "Impeller wear ring clearance checked with taper gauge",
                 "Oil mist console differential pressure adjusted",
-                "Thermography noted 4°C delta on DE bearing",
+                "Thermography noted 4 degC delta on DE bearing",
             ],
         ),
         dict(
@@ -292,7 +292,7 @@ def build_maintenance_log(pumps: List[dict]) -> None:
             actions=["inspect", "repair", "replace"],
             components=["motor", "bearing", "seal"],
             notes=[
-                "High-energy vibration at 1× RPM investigated",
+                "High-energy vibration at 1x RPM investigated",
                 "Motor winding surge test performed post rewind",
                 "Seal flush conductivity matched condensate spec",
             ],
@@ -373,7 +373,7 @@ def build_maintenance_log(pumps: List[dict]) -> None:
 
     entries.sort()
     path = BASE_DIR / "maintenance_log.csv"
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(
             ["date", "pump_id", "action", "component", "notes", "downtime_hours"]
@@ -422,7 +422,7 @@ def build_failure_log(pumps: List[dict]) -> None:
         )
     records.sort()
     path = RAW_DIR / "failure_data.csv"
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(
             [
@@ -575,7 +575,7 @@ def build_operation_log(pumps: List[dict]) -> None:
 
     rows.sort(key=lambda r: (r[0], r[1]))
     path = BASE_DIR / "operation_log.csv"
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(headers)
         writer.writerows(rows)
