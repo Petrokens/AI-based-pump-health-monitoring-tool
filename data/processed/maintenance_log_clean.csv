@@ -1,4 +1,0 @@
-date,pump_id,action,component,notes,downtime_hours
-2024-11-15,P-101,replace,seals,mechanical seal leakage,4
-2024-11-20,P-102,inspect,motor,"routine inspection, no issues found",0
-2024-11-25,P-103,repair,impeller,impeller damage repaired,6

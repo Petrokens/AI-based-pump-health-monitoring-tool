@@ -1,0 +1,43 @@
+import React from 'react';
+import { LayoutDashboard, Brain, TrendingUp, Settings, Bell, BarChart3, Cpu } from 'lucide-react';
+
+const Sidebar = ({ selectedView, onViewChange }) => {
+  const menuItems = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'insights', icon: Brain, label: 'AI Insights' },
+    { id: 'trends', icon: TrendingUp, label: 'Trend Explorer' },
+    { id: 'alerts', icon: Bell, label: 'Alerts' },
+    { id: 'reports', icon: BarChart3, label: 'Reports' },
+    { id: 'components', icon: Cpu, label: 'Components' },
+    { id: 'settings', icon: Settings, label: 'Settings' },
+  ];
+
+  return (
+    <aside className="w-20 bg-slate-800 border-r border-slate-700 flex flex-col items-center py-6 space-y-6">
+      <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center mb-4">
+        <span className="text-white font-bold text-xl">PM</span>
+      </div>
+
+      <nav className="flex-1 flex flex-col space-y-2">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onViewChange(item.id)}
+            className={`w-16 h-16 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all ${
+              selectedView === item.id
+                ? 'bg-primary-500 text-white'
+                : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+            }`}
+            title={item.label}
+          >
+            <item.icon className="w-6 h-6" />
+            <span className="text-xs">{item.label.split(' ')[0]}</span>
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
+};
+
+export default Sidebar;
+

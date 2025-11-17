@@ -1,0 +1,51 @@
+date,pump_id,action,component,notes,downtime_hours
+2024-11-23,P-101,replace,bearing,Bearing noise detected,2
+2024-11-23,P-108,inspect,seal,Seal replacement,2
+2024-11-27,P-110,inspect,impeller,Impeller balance check,1
+2024-12-01,P-104,calibrate,general,Preventive maintenance,10
+2024-12-01,P-111,repair,impeller,Impeller balance check,4
+2024-12-17,P-103,replace,alignment,Misalignment detected and corrected,2
+2024-12-21,P-106,replace,alignment,Alignment verification,6
+2024-12-24,P-102,calibrate,impeller,Wear rings replaced,8
+2024-12-25,P-105,inspect,bearing,Bearing noise detected,0
+2025-01-12,P-105,calibrate,lubricant,Oil change,12
+2025-01-24,P-102,repair,impeller,Wear rings replaced,10
+2025-02-08,P-102,replace,general,General inspection - all parameters normal,4
+2025-02-09,P-109,calibrate,impeller,Impeller balance check,4
+2025-02-22,P-107,repair,seal,Mechanical seal leakage detected,10
+2025-03-03,P-106,replace,impeller,Impeller wear inspection,4
+2025-03-11,P-107,replace,general,Preventive maintenance,6
+2025-03-17,P-101,replace,lubricant,Lubricant condition check,2
+2025-03-21,P-108,repair,lubricant,Bearing lubrication replacement,8
+2025-03-28,P-109,repair,alignment,Alignment verification,4
+2025-04-07,P-102,inspect,alignment,Alignment verification,0
+2025-04-26,P-101,calibrate,seal,Mechanical seal leakage detected,12
+2025-04-28,P-111,repair,motor,Motor insulation test,6
+2025-05-06,P-112,repair,motor,Motor winding inspection,12
+2025-05-23,P-109,inspect,general,Preventive maintenance,1
+2025-05-30,P-104,repair,seal,Seal face wear observed,8
+2025-05-31,P-107,inspect,coupling,Coupling alignment check,1
+2025-06-22,P-105,inspect,general,Routine quarterly inspection,0
+2025-06-25,P-101,repair,impeller,Impeller balance check,6
+2025-07-03,P-106,calibrate,impeller,Impeller cavitation damage,12
+2025-07-14,P-101,inspect,lubricant,Bearing lubrication replacement,2
+2025-07-18,P-109,repair,general,General inspection - all parameters normal,8
+2025-07-20,P-111,repair,bearing,Bearing temperature high,6
+2025-07-27,P-109,inspect,seal,Seal flush system checked,1
+2025-08-08,P-111,replace,coupling,Coupling wear inspection,8
+2025-08-09,P-103,repair,impeller,Wear rings replaced,6
+2025-08-14,P-103,calibrate,alignment,Alignment verification,12
+2025-08-26,P-112,replace,lubricant,Lubricant condition check,4
+2025-08-26,P-110,replace,seal,Mechanical seal leakage detected,6
+2025-08-28,P-107,replace,coupling,Coupling misalignment corrected,4
+2025-09-07,P-105,repair,bearing,Bearing noise detected,12
+2025-09-09,P-108,replace,motor,Motor winding inspection,8
+2025-09-09,P-107,calibrate,motor,Motor winding inspection,8
+2025-09-12,P-104,inspect,bearing,Bearing lubrication replacement,0
+2025-09-17,P-110,inspect,bearing,Bearing temperature high,1
+2025-09-27,P-106,replace,general,Preventive maintenance,4
+2025-09-30,P-103,inspect,impeller,Impeller balance check,2
+2025-10-14,P-112,replace,motor,Motor insulation test,2
+2025-10-28,P-106,replace,lubricant,Lubricant condition check,4
+2025-11-04,P-105,inspect,bearing,Bearing temperature high,2
+2025-11-08,P-110,repair,lubricant,Bearing lubrication replacement,8
