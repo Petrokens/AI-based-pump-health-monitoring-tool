@@ -194,10 +194,34 @@ def _calculate_payload(pump_id: str, state: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _refresh_running_runtime_locked(pump_id: str) -> bool:
+    """Accumulate elapsed runtime into state when pump is running."""
+    state = runtime_state[pump_id]
+    if not state.get("is_running"):
+        return False
+    last_change = _parse_iso(state.get("last_state_change") or "")
+    if not last_change:
+        return False
+    now = datetime.now()
+    elapsed = (now - last_change).total_seconds()
+    if elapsed <= 0:
+        return False
+    state["runtime_seconds"] = float(state.get("runtime_seconds", 0.0) + elapsed)
+    state["last_state_change"] = now.isoformat()
+    return True
+
+
 def get_runtime_payload(pump_id: str) -> Dict[str, Any]:
+    snapshot = None
     with runtime_state_lock:
         _ensure_runtime_entry(pump_id)
-        state_copy = dict(runtime_state[pump_id])
+        state = runtime_state[pump_id]
+        refreshed = _refresh_running_runtime_locked(pump_id)
+        state_copy = dict(state)
+        if refreshed:
+            snapshot = {k: dict(v) for k, v in runtime_state.items()}
+    if snapshot:
+        _write_runtime_state_file(snapshot)
     return _calculate_payload(pump_id, state_copy)
 
 

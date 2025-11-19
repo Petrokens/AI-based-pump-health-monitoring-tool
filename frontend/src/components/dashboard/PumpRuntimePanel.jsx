@@ -2,18 +2,23 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Clock3, Power, PowerOff } from 'lucide-react';
 import { controlPump, fetchPumpRuntime } from '../../services/api';
 
-const formatDuration = (hours = 0) => {
-  const totalMinutes = Math.max(0, Math.round(hours * 60));
-  const hrs = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  return `${hrs.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m`;
+const formatDuration = (seconds = 0) => {
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const hrs = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  return `${hrs.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m ${secs
+    .toString()
+    .padStart(2, '0')}s`;
 };
 
-const PumpRuntimePanel = ({ pumpId }) => {
+const PumpRuntimePanel = ({ pumpId, refreshKey }) => {
   const [runtime, setRuntime] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [displaySeconds, setDisplaySeconds] = useState({ total: 0, today: 0 });
+  const [systemTime, setSystemTime] = useState(new Date());
 
   const loadRuntime = useCallback(async () => {
     if (!pumpId) return;
@@ -34,7 +39,37 @@ const PumpRuntimePanel = ({ pumpId }) => {
     loadRuntime();
     const interval = setInterval(loadRuntime, 15000);
     return () => clearInterval(interval);
-  }, [loadRuntime]);
+  }, [loadRuntime, refreshKey]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setSystemTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!runtime) {
+      setDisplaySeconds({ total: 0, today: 0 });
+      return undefined;
+    }
+    const baseTotalSeconds = Math.max(0, runtime.total_runtime_hours * 3600);
+    const baseTodaySeconds = Math.max(0, runtime.today_runtime_hours * 3600);
+    const lastChange = runtime.last_state_change ? new Date(runtime.last_state_change).getTime() : null;
+    const now = Date.now();
+    const runningOffset = runtime.is_running && lastChange ? (now - lastChange) / 1000 : 0;
+    setDisplaySeconds({
+      total: baseTotalSeconds + (runtime.is_running ? runningOffset : 0),
+      today: baseTodaySeconds + (runtime.is_running ? runningOffset : 0),
+    });
+
+    if (!runtime.is_running) return undefined;
+    const interval = setInterval(() => {
+      setDisplaySeconds(prev => ({
+        total: prev.total + 1,
+        today: prev.today + 1,
+      }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [runtime]);
 
   const handleControl = async () => {
     if (!runtime || !pumpId) return;
@@ -91,31 +126,37 @@ const PumpRuntimePanel = ({ pumpId }) => {
         <div className="flex items-center gap-3">
           <Clock3 className="text-primary-400" />
           <div>
-            <p className="text-slate-400 text-sm">Pump Runtime</p>
+            <p className="text-slate-400 text-sm">Live Motor Runtime</p>
             <p className="text-white text-lg font-semibold">{pumpId}</p>
           </div>
         </div>
         {statusBadge}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-slate-900/50 rounded-xl p-4">
+          <p className="text-xs text-slate-400 uppercase tracking-wide">System Time</p>
+          <p className="text-2xl font-bold text-white mt-1">{systemTime.toLocaleTimeString()}</p>
+          <p className="text-xs text-slate-500">{systemTime.toLocaleDateString()}</p>
+        </div>
         <div className="bg-slate-900/50 rounded-xl p-4">
           <p className="text-xs text-slate-400 uppercase tracking-wide">Today</p>
-          <p className="text-2xl font-bold text-white mt-1">{formatDuration(runtime.today_runtime_hours)}</p>
+          <p className="text-2xl font-bold text-white mt-1">{formatDuration(displaySeconds.today)}</p>
           <p className="text-xs text-slate-500">Last {runtime.log_window_hours}h window</p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-4">
           <p className="text-xs text-slate-400 uppercase tracking-wide">Total Runtime</p>
-          <p className="text-2xl font-bold text-white mt-1">{formatDuration(runtime.total_runtime_hours)}</p>
+          <p className="text-2xl font-bold text-white mt-1">{formatDuration(displaySeconds.total)}</p>
           <p className="text-xs text-slate-500">Accumulated (simulated)</p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-4">
           <p className="text-xs text-slate-400 uppercase tracking-wide">Last Change</p>
           <p className="text-base text-white mt-1">{runtime.last_state_change ? new Date(runtime.last_state_change).toLocaleString() : '—'}</p>
           <p className="text-xs text-slate-500">
-            {runtime.is_running ? `Started: ${runtime.last_start ? new Date(runtime.last_start).toLocaleTimeString() : '—'}` :
-              `Stopped: ${runtime.last_stop ? new Date(runtime.last_stop).toLocaleTimeString() : '—'}`}
+            {runtime.is_running ? `Running since ${runtime.last_start ? new Date(runtime.last_start).toLocaleTimeString() : '—'}` :
+              `Stopped at ${runtime.last_stop ? new Date(runtime.last_stop).toLocaleTimeString() : '—'}`}
           </p>
+          <p className="text-xs text-slate-500 mt-1">Now: {systemTime.toLocaleString()}</p>
         </div>
       </div>
 
