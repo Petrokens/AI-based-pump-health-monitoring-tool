@@ -29,6 +29,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [isPumpRunning, setIsPumpRunning] = useState(true);
 
   useEffect(() => {
     loadPumps();
@@ -64,6 +65,10 @@ function App() {
   };
 
   const currentPump = pumps.find(p => p.id === selectedPump);
+
+  useEffect(() => {
+    setIsPumpRunning(true);
+  }, [selectedPump]);
 
   return (
     <div className="flex h-screen bg-slate-900">
@@ -112,19 +117,30 @@ function App() {
               {selectedView === 'dashboard' && (
                 <>
                   <PumpOverview pumpId={selectedPump} />
-                  <PumpRuntimePanel pumpId={selectedPump} />
-                  <RealtimeOperatingPanel pumpId={selectedPump} />
-                  <VibrationMechanical pumpId={selectedPump} />
-                  <ThermalDiagnostics pumpId={selectedPump} />
-                  <HydraulicAlarms pumpId={selectedPump} />
-                  <ElectricalHealth pumpId={selectedPump} />
-                  <MLOutputs pumpId={selectedPump} />
-                  <RootCausePanel pumpId={selectedPump} />
-                  <MaintenanceHistory pumpId={selectedPump} />
-                  <KPICards pumpId={selectedPump} />
-                  <PerformanceChart pumpId={selectedPump} />
-                  <AIInsights pumpId={selectedPump} />
-                  <TrendExplorer pumpId={selectedPump} />
+                  <PumpRuntimePanel pumpId={selectedPump} onStatusChange={setIsPumpRunning} />
+                  {isPumpRunning ? (
+                    <>
+                      <RealtimeOperatingPanel pumpId={selectedPump} />
+                      <VibrationMechanical pumpId={selectedPump} />
+                      <ThermalDiagnostics pumpId={selectedPump} />
+                      <HydraulicAlarms pumpId={selectedPump} />
+                      <ElectricalHealth pumpId={selectedPump} />
+                      <MLOutputs pumpId={selectedPump} />
+                      <RootCausePanel pumpId={selectedPump} />
+                      <MaintenanceHistory pumpId={selectedPump} />
+                      <KPICards pumpId={selectedPump} />
+                      <PerformanceChart pumpId={selectedPump} />
+                      <AIInsights pumpId={selectedPump} />
+                      <TrendExplorer pumpId={selectedPump} />
+                    </>
+                  ) : (
+                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 text-center mt-4">
+                      <h3 className="text-xl font-semibold text-white mb-2">Pump Stopped</h3>
+                      <p className="text-slate-400">
+                        Live feeds are paused while the pump is stopped. Start the pump to resume real-time diagnostics.
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
               

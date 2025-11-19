@@ -12,7 +12,7 @@ const formatDuration = (seconds = 0) => {
     .padStart(2, '0')}s`;
 };
 
-const PumpRuntimePanel = ({ pumpId }) => {
+const PumpRuntimePanel = ({ pumpId, onStatusChange }) => {
   const [runtime, setRuntime] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,6 +25,7 @@ const PumpRuntimePanel = ({ pumpId }) => {
     try {
       const data = await fetchPumpRuntime(pumpId);
       setRuntime(data);
+      onStatusChange?.(Boolean(data?.is_running));
       setError(null);
     } catch (err) {
       console.error('Failed to load runtime info', err);
@@ -78,6 +79,7 @@ const PumpRuntimePanel = ({ pumpId }) => {
     try {
       const data = await controlPump(pumpId, nextAction);
       setRuntime(data);
+      onStatusChange?.(Boolean(data?.is_running));
       setError(null);
     } catch (err) {
       console.error('Failed to send control command', err);
@@ -163,7 +165,7 @@ const PumpRuntimePanel = ({ pumpId }) => {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-slate-400">Manual Control</p>
-          <p className="text-xs text-slate-500">Simulated start/stop request for demo purposes</p>
+          <p className="text-xs text-slate-500">Send real-time start/stop commands to this pump</p>
         </div>
         <button
           onClick={handleControl}
