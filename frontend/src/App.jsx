@@ -29,7 +29,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [runtimeRefreshKey, setRuntimeRefreshKey] = useState(0);
 
   useEffect(() => {
     loadPumps();
@@ -66,10 +65,6 @@ function App() {
 
   const currentPump = pumps.find(p => p.id === selectedPump);
 
-  const handlePumpControl = () => {
-    setRuntimeRefreshKey(Date.now());
-  };
-
   return (
     <div className="flex h-screen bg-slate-900">
       <Sidebar 
@@ -84,7 +79,6 @@ function App() {
           pumps={pumps}
           lastUpdate={lastUpdate}
           currentPumpStatus={currentPump?.status}
-          onPumpControl={handlePumpControl}
         />
         
         <main className="flex-1 overflow-y-auto bg-slate-900 p-6">
@@ -118,7 +112,7 @@ function App() {
               {selectedView === 'dashboard' && (
                 <>
                   <PumpOverview pumpId={selectedPump} />
-                  <PumpRuntimePanel pumpId={selectedPump} refreshKey={runtimeRefreshKey} />
+                  <PumpRuntimePanel pumpId={selectedPump} />
                   <RealtimeOperatingPanel pumpId={selectedPump} />
                   <VibrationMechanical pumpId={selectedPump} />
                   <ThermalDiagnostics pumpId={selectedPump} />

@@ -12,7 +12,7 @@ const formatDuration = (seconds = 0) => {
     .padStart(2, '0')}s`;
 };
 
-const PumpRuntimePanel = ({ pumpId, refreshKey }) => {
+const PumpRuntimePanel = ({ pumpId }) => {
   const [runtime, setRuntime] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,7 +39,7 @@ const PumpRuntimePanel = ({ pumpId, refreshKey }) => {
     loadRuntime();
     const interval = setInterval(loadRuntime, 15000);
     return () => clearInterval(interval);
-  }, [loadRuntime, refreshKey]);
+  }, [loadRuntime]);
 
   useEffect(() => {
     const interval = setInterval(() => setSystemTime(new Date()), 1000);

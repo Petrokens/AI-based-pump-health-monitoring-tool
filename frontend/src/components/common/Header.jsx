@@ -1,8 +1,7 @@
 import React from 'react';
 import { Activity, Clock } from 'lucide-react';
-import PumpControlButton from './PumpControlButton';
 
-const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStatus, onPumpControl }) => {
+const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStatus }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'normal': return 'bg-green-500';
@@ -59,8 +58,6 @@ const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStat
               )}
             </select>
           </div>
-
-          <PumpControlButton pumpId={selectedPump} onControl={onPumpControl} />
         </div>
 
         <div className="flex items-center space-x-6">
