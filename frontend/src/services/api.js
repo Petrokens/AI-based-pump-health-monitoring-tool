@@ -118,3 +118,15 @@ export const fetchTrendSignals = async (pumpId, signals = [], hours = 24) => {
   return response.data;
 };
 
+export const fetchPumpRuntime = async (pumpId) => {
+  const response = await api.get(`/pump/${pumpId}/runtime`);
+  return response.data;
+};
+
+export const controlPump = async (pumpId, action) => {
+  const response = await api.post(`/pump/${pumpId}/control`, { action });
+  return response.data;
+};
+
+
+

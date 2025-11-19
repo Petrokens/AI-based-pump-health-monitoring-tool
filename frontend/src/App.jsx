@@ -19,6 +19,7 @@ import AlertsWorkflow from './components/AlertsWorkflow';
 import ReportsKPIs from './components/ReportsKPIs';
 import PumpSystemComponents from './components/PumpSystemComponents';
 import Settings from './components/Settings';
+import PumpRuntimePanel from './components/dashboard/PumpRuntimePanel';
 import { fetchPumps } from './services/api';
 
 function App() {
@@ -112,6 +113,7 @@ function App() {
                 <>
                   <PumpOverview pumpId={selectedPump} />
                   <RealtimeOperatingPanel pumpId={selectedPump} />
+                  <PumpRuntimePanel pumpId={selectedPump} />
                   <VibrationMechanical pumpId={selectedPump} />
                   <ThermalDiagnostics pumpId={selectedPump} />
                   <HydraulicAlarms pumpId={selectedPump} />

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import json
 import os
+import threading
 from typing import Dict, List, Any
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
@@ -93,6 +94,139 @@ try:
 except Exception as e:
     print(f"⚠ ERROR: Could not load CSV files: {e}")
     exit(1)
+
+# ==================== Runtime State Tracking ====================
+
+RUNTIME_STATE_FILE = os.path.join(DATA_DIR, 'runtime_state.json')
+runtime_state_lock = threading.Lock()
+
+
+def _default_runtime_state():
+    now_iso = datetime.now().isoformat()
+    return {
+        "is_running": True,
+        "last_state_change": now_iso,
+        "last_start": now_iso,
+        "last_stop": None,
+        "runtime_seconds": 0.0,
+    }
+
+
+def _read_runtime_state_file():
+    if os.path.exists(RUNTIME_STATE_FILE):
+        try:
+            with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+                if isinstance(data, dict):
+                    return data
+        except Exception:
+            pass
+    return {}
+
+
+def _write_runtime_state_file(snapshot: Dict[str, Dict[str, Any]]):
+    try:
+        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as fh:
+            json.dump(snapshot, fh, indent=2)
+    except Exception as exc:
+        print(f"⚠ Unable to persist runtime state: {exc}")
+
+
+runtime_state: Dict[str, Dict[str, Any]] = _read_runtime_state_file()
+
+
+def _ensure_runtime_entry(pump_id: str):
+    if pump_id not in runtime_state:
+        runtime_state[pump_id] = _default_runtime_state()
+
+
+for pump_id_value in pump_master_df["pump_id"].values:
+    _ensure_runtime_entry(str(pump_id_value))
+
+_write_runtime_state_file({k: dict(v) for k, v in runtime_state.items()})
+
+
+def _parse_iso(ts: str):
+    try:
+        return datetime.fromisoformat(ts)
+    except Exception:
+        return None
+
+
+def _calculate_recent_runtime_hours(pump_id: str, hours: int = 24) -> float:
+    if "timestamp" not in operation_log_df or operation_log_df.empty:
+        return 0.0
+    latest_timestamp = operation_log_df["timestamp"].max()
+    if pd.isna(latest_timestamp):
+        return 0.0
+    cutoff = latest_timestamp - timedelta(hours=hours)
+    pump_ops = operation_log_df[
+        (operation_log_df["pump_id"] == pump_id)
+        & (operation_log_df["timestamp"] >= cutoff)
+    ]
+    if pump_ops.empty:
+        return 0.0
+    running_statuses = {"running", "alarm", "startup"}
+    interval_minutes = 15  # data generated in 15-min steps
+    running_points = pump_ops[pump_ops["status"].isin(running_statuses)]
+    runtime_hours = (len(running_points) * interval_minutes) / 60.0
+    return round(runtime_hours, 2)
+
+
+def _calculate_payload(pump_id: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    now = datetime.now()
+    total_seconds = float(state.get("runtime_seconds", 0.0))
+    last_change = _parse_iso(state.get("last_state_change") or "")
+    if state.get("is_running") and last_change:
+        total_seconds += (now - last_change).total_seconds()
+    total_hours = round(total_seconds / 3600.0, 2)
+
+    return {
+        "pump_id": pump_id,
+        "status": "running" if state.get("is_running") else "stopped",
+        "is_running": bool(state.get("is_running")),
+        "total_runtime_hours": total_hours,
+        "today_runtime_hours": _calculate_recent_runtime_hours(pump_id, 24),
+        "log_window_hours": 24,
+        "last_start": state.get("last_start"),
+        "last_stop": state.get("last_stop"),
+        "last_state_change": state.get("last_state_change"),
+    }
+
+
+def get_runtime_payload(pump_id: str) -> Dict[str, Any]:
+    with runtime_state_lock:
+        _ensure_runtime_entry(pump_id)
+        state_copy = dict(runtime_state[pump_id])
+    return _calculate_payload(pump_id, state_copy)
+
+
+def update_runtime_state(pump_id: str, action: str) -> Dict[str, Any]:
+    snapshot = None
+    with runtime_state_lock:
+        _ensure_runtime_entry(pump_id)
+        state = runtime_state[pump_id]
+        now = datetime.now()
+        last_change = _parse_iso(state.get("last_state_change") or now.isoformat())
+
+        if action == "stop" and state.get("is_running"):
+            if last_change:
+                elapsed = (now - last_change).total_seconds()
+                state["runtime_seconds"] = float(state.get("runtime_seconds", 0.0) + max(elapsed, 0))
+            state["is_running"] = False
+            state["last_stop"] = now.isoformat()
+            state["last_state_change"] = now.isoformat()
+        elif action == "start" and not state.get("is_running"):
+            state["is_running"] = True
+            state["last_start"] = now.isoformat()
+            state["last_state_change"] = now.isoformat()
+
+        payload = _calculate_payload(pump_id, dict(state))
+        snapshot = {k: dict(v) for k, v in runtime_state.items()}
+
+    if snapshot is not None:
+        _write_runtime_state_file(snapshot)
+    return payload
 
 # ==================== Feature Engineering ====================
 
@@ -579,6 +713,37 @@ def get_pumps():
             continue
     
     return jsonify(pump_list)
+
+
+@app.route('/api/pump/<pump_id>/runtime', methods=['GET'])
+def get_pump_runtime(pump_id):
+    """Return runtime metrics for a pump."""
+    if pump_id not in pump_master_df['pump_id'].values:
+        return jsonify({"error": "Pump not found"}), 404
+    try:
+        payload = get_runtime_payload(pump_id)
+        return jsonify(payload)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.route('/api/pump/<pump_id>/control', methods=['POST'])
+def control_pump(pump_id):
+    """Simulate start/stop control for a pump."""
+    if pump_id not in pump_master_df['pump_id'].values:
+        return jsonify({"error": "Pump not found"}), 404
+
+    payload = request.get_json(silent=True) or {}
+    action = (payload.get("action") or "").lower()
+    if action not in {"start", "stop"}:
+        return jsonify({"error": "Invalid action. Use 'start' or 'stop'."}), 400
+
+    try:
+        runtime_payload = update_runtime_state(pump_id, action)
+        runtime_payload["message"] = f"Pump {pump_id} {'started' if action == 'start' else 'stopped'} successfully."
+        return jsonify(runtime_payload)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
 
 @app.route('/api/pump/<pump_id>/realtime', methods=['GET'])
 def get_realtime_data(pump_id):
