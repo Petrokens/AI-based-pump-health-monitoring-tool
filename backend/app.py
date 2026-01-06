@@ -18,13 +18,35 @@ import warnings
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
+
 # Configure CORS to allow requests from frontend (development and production)
+# Allow all origins including Netlify (https://ai-petro-pump-health.netlify.app) and Render deployments
+# Using "*" allows all origins - works for Netlify, Render, and localhost
 CORS(app, 
-     resources={r"/api/*": {"origins": "*"}},
-     supports_credentials=True,
-     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-     expose_headers=["Content-Length", "Content-Type"])
+     resources={
+         r"/api/*": {
+             "origins": "*",  # Allow all origins (Netlify, Render, localhost, etc.)
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+             "expose_headers": ["Content-Length", "Content-Type", "Authorization"],
+             "supports_credentials": True,
+             "max_age": 3600
+         }
+     },
+     supports_credentials=True)
+
+# Add explicit CORS headers to all responses (backup to Flask-CORS)
+@app.after_request
+def after_request(response):
+    """Add CORS headers to all responses - ensures compatibility"""
+    # Only add if not already set by Flask-CORS
+    if 'Access-Control-Allow-Origin' not in response.headers:
+        response.headers.add('Access-Control-Allow-Origin', '*')
+    if 'Access-Control-Allow-Headers' not in response.headers:
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
+    if 'Access-Control-Allow-Methods' not in response.headers:
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
+    return response
 
 # Lightweight cache for expensive endpoints
 PUMP_LIST_CACHE = {
@@ -827,6 +849,13 @@ class RealDataProvider:
         return series
 
 # ==================== API Endpoints ====================
+
+# Global OPTIONS handler for CORS preflight requests
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    """Handle CORS preflight requests"""
+    response = jsonify({})
+    return response
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
