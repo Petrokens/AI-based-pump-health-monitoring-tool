@@ -31,19 +31,29 @@ function App() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {
-    // Initial load with retry logic
-    const attemptLoad = async (retries = 3) => {
+    let pollingInterval = 10000; // Start with 10 seconds (reduce spam)
+    let intervalId = null;
+    let consecutiveFailures = 0;
+    
+    // Initial load with exponential backoff retry logic
+    const attemptLoad = async (retries = 5) => {
+      let retryDelay = 2000;
       for (let i = 0; i < retries; i++) {
         try {
           await loadPumps();
+          consecutiveFailures = 0;
+          pollingInterval = 10000; // Reset to 10s on success
           break; // Success, exit retry loop
         } catch (error) {
+          consecutiveFailures++;
           if (i === retries - 1) {
             // Last attempt failed
-            console.error('Failed to connect after', retries, 'attempts');
+            console.warn('Failed to connect after', retries, 'attempts. Backend may be sleeping.');
+            pollingInterval = 30000; // Increase delay on persistent failure
           } else {
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Exponential backoff: 2s, 4s, 8s, 16s
+            retryDelay = Math.min(16000, retryDelay * 2);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
           }
         }
       }
@@ -51,12 +61,34 @@ function App() {
     
     attemptLoad();
     
-    const interval = setInterval(() => {
-      loadPumps();
-      setLastUpdate(new Date());
-    }, 2000); // Update every 2 seconds for fast live reading
+    // Adaptive polling: slower when errors occur, faster when successful
+    const scheduleNextPoll = () => {
+      if (intervalId) {
+        clearTimeout(intervalId);
+      }
+      intervalId = setTimeout(async () => {
+        try {
+          await loadPumps();
+          consecutiveFailures = 0;
+          pollingInterval = 10000; // Reset to 10s on success
+          setLastUpdate(new Date());
+        } catch (error) {
+          consecutiveFailures++;
+          // On error, increase polling interval to reduce spam
+          pollingInterval = Math.min(30000, 10000 + (consecutiveFailures * 5000));
+        }
+        scheduleNextPoll();
+      }, pollingInterval);
+    };
+    
+    // Start polling after initial load
+    scheduleNextPoll();
 
-    return () => clearInterval(interval);
+    return () => {
+      if (intervalId) {
+        clearTimeout(intervalId);
+      }
+    };
   }, []);
 
   const loadPumps = async () => {
@@ -71,15 +103,23 @@ function App() {
           }
           return data[0].id;
         });
+        setLoading(false);
       } else {
         setError('No pump data available');
+        setLoading(false);
       }
-      setLoading(false);
     } catch (error) {
-      console.error('Error loading pumps:', error);
+      // Only log first error to reduce spam
+      if (!error._logged) {
+        error._logged = true;
+        console.error('Error loading pumps:', error);
+      }
+      
       let errorMessage = 'Failed to connect to backend.';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMessage = 'Backend request timed out. The server may be processing large datasets. Please wait and retry.';
+        errorMessage = 'Backend request timed out. The server may be processing large datasets.';
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Cannot connect to backend. The server may be sleeping (Render free tier takes ~30s to wake up) or unreachable. Please wait and refresh.';
       } else if (error.message) {
         errorMessage = error.message;
       } else if (error.response?.data?.error) {

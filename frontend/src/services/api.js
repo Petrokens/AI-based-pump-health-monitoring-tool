@@ -34,6 +34,12 @@ const getCustomApiUrl = () => {
 const customUrl = getCustomApiUrl();
 const API_BASE_URL = customUrl || getApiBaseUrl();
 
+// Log API URL in development or first load
+if (import.meta.env.DEV || !sessionStorage.getItem('api_url_logged')) {
+  console.log('🔗 API Base URL:', API_BASE_URL);
+  sessionStorage.setItem('api_url_logged', 'true');
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 20000, // Increased to 20s for fast polling with large datasets
@@ -47,21 +53,41 @@ export const updateApiBaseUrl = (newUrl) => {
   api.defaults.baseURL = newUrl;
 };
 
+// Track consecutive errors to reduce spam
+let consecutiveErrors = 0;
+let lastErrorTime = 0;
+const ERROR_LOG_INTERVAL = 5000; // Only log errors every 5 seconds
+
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Reset error counter on success
+    consecutiveErrors = 0;
+    return response;
+  },
   (error) => {
-    // Only log timeout errors, not all errors (to reduce console spam)
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-      console.warn('API request timeout - backend may be slow or overloaded');
-    } else {
-      console.error('API Error:', error.message);
-      if (error.response) {
+    consecutiveErrors++;
+    const now = Date.now();
+    
+    // Only log errors if enough time has passed since last log (reduce spam)
+    if (now - lastErrorTime > ERROR_LOG_INTERVAL || consecutiveErrors === 1) {
+      lastErrorTime = now;
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        console.warn('API request timeout - backend may be slow or overloaded');
+      } else if (error.code === 'ERR_NETWORK') {
+        // Network errors - backend might be sleeping or unreachable
+        if (consecutiveErrors === 1) {
+          console.warn('Network error: Backend may be sleeping (Render free tier) or unreachable. Retrying...');
+        }
+      } else if (error.response) {
         // Server responded with error status
         console.error('Response error:', error.response.status, error.response.data);
       } else if (error.request) {
-        // Request made but no response (likely backend not running)
-        console.error('No response from server. Is the backend running?');
+        // Request made but no response
+        if (consecutiveErrors === 1) {
+          console.warn('No response from server. Backend may be starting up or sleeping.');
+        }
       }
     }
     return Promise.reject(error);
