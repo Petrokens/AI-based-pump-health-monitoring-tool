@@ -15,6 +15,7 @@ import {
   Volume2
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { updateApiBaseUrl } from '../services/api';
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
@@ -147,6 +148,7 @@ const Settings = () => {
 
   const handleSave = () => {
     localStorage.setItem('pumpMonitoringSettings', JSON.stringify(settings));
+    
     // Apply theme immediately using ThemeContext
     if (settings.display.theme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -154,6 +156,12 @@ const Settings = () => {
     } else {
       setTheme(settings.display.theme);
     }
+    
+    // Update API base URL immediately if changed
+    if (settings.api?.baseUrl) {
+      updateApiBaseUrl(settings.api.baseUrl);
+    }
+    
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -591,10 +599,17 @@ const Settings = () => {
                       <input
                         type="text"
                         value={settings.api.baseUrl}
-                        onChange={(e) => updateSetting('api', 'baseUrl', e.target.value)}
+                        onChange={(e) => {
+                          updateSetting('api', 'baseUrl', e.target.value);
+                          // Update API URL immediately for testing
+                          updateApiBaseUrl(e.target.value);
+                        }}
                         className="w-full bg-[var(--bg-input)] text-[var(--text-primary)] px-4 py-2 rounded-lg border border-[var(--border-light)] focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="https://ai-based-pump-health-monitoring-tool.onrender.com/api"
                       />
+                      <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                        Default: https://ai-based-pump-health-monitoring-tool.onrender.com/api
+                      </p>
                     </div>
                     <div className="bg-[var(--bg-secondary)]/50 rounded-lg p-4">
                       <label className="text-sm text-[var(--text-secondary)] mb-2 block">Timeout (ms)</label>
