@@ -228,7 +228,9 @@ const DemoSimulation = ({ pumpId }) => {
   }
 
   const currentPoint = simulationData.series[currentIndex];
-  const progress = ((currentIndex + 1) / simulationData.series.length) * 100;
+  const progress = simulationData.series.length > 0 
+    ? ((currentIndex + 1) / simulationData.series.length) * 100 
+    : 0;
   const remainingTime = simulationData.playback_duration_seconds - elapsedTime;
 
   return (
@@ -291,7 +293,7 @@ const DemoSimulation = ({ pumpId }) => {
           <div className="w-full bg-[var(--bg-secondary)] h-3 rounded-full overflow-hidden">
             <div
               className="bg-primary-500 h-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
             ></div>
           </div>
         </div>
@@ -424,7 +426,9 @@ const DemoSimulation = ({ pumpId }) => {
           </div>
           <div className="text-right">
             <p>Point {currentIndex + 1} of {simulationData.series.length}</p>
-            <p>Progress: {progress.toFixed(1)}%</p>
+            <p className="text-[var(--text-primary)] font-semibold">
+              Progress: {isNaN(progress) || !isFinite(progress) ? '0.0' : Math.min(100, Math.max(0, progress)).toFixed(1)}%
+            </p>
           </div>
         </div>
       </div>

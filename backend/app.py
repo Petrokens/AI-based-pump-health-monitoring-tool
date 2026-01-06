@@ -18,7 +18,13 @@ import warnings
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow requests from frontend (development and production)
+CORS(app, 
+     resources={r"/api/*": {"origins": "*"}},
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+     expose_headers=["Content-Length", "Content-Type"])
 
 # Lightweight cache for expensive endpoints
 PUMP_LIST_CACHE = {

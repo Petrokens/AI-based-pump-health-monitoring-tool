@@ -64,7 +64,7 @@ const Settings = () => {
     },
     // API Settings
     api: {
-      baseUrl: 'https://ai-based-pump-health-monitoring-tool.onrender.com/api',
+      baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://ai-based-pump-health-monitoring-tool.onrender.com/api',
       timeout: 20000, // Increased for fast polling
       retryAttempts: 3,
     }

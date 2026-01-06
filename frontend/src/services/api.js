@@ -1,7 +1,38 @@
 import axios from 'axios';
 
-// Use environment variable for production, fallback to relative path for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Determine API base URL based on environment
+// Production: Use Render API
+// Development: Use local proxy or environment variable
+const getApiBaseUrl = () => {
+  // Check if we're in production (deployed on Render or other hosting)
+  if (import.meta.env.PROD) {
+    // In production, use the Render API
+    return import.meta.env.VITE_API_BASE_URL || 'https://ai-based-pump-health-monitoring-tool.onrender.com/api';
+  }
+  
+  // In development, check for environment variable or use local proxy
+  return import.meta.env.VITE_API_BASE_URL || '/api';
+};
+
+// Check localStorage for custom API URL (from Settings)
+const getCustomApiUrl = () => {
+  try {
+    const savedSettings = localStorage.getItem('pumpMonitoringSettings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      if (settings.api?.baseUrl) {
+        return settings.api.baseUrl;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading API settings:', e);
+  }
+  return null;
+};
+
+// Get the final API base URL (custom settings override defaults)
+const customUrl = getCustomApiUrl();
+const API_BASE_URL = customUrl || getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,6 +41,11 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Function to update API base URL dynamically (for Settings page)
+export const updateApiBaseUrl = (newUrl) => {
+  api.defaults.baseURL = newUrl;
+};
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
