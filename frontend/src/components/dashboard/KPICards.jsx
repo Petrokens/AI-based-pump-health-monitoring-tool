@@ -9,7 +9,7 @@ const KPICards = ({ pumpId }) => {
 
   useEffect(() => {
     loadKPIs();
-    const interval = setInterval(loadKPIs, 10000);
+    const interval = setInterval(loadKPIs, 2000); // Update every 2 seconds for fast live reading
     return () => clearInterval(interval);
   }, [pumpId]);
 

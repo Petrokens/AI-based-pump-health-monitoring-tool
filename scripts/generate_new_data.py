@@ -358,7 +358,8 @@ def build_maintenance_log(pumps: List[dict]) -> None:
     entries = []
     for program in site_programs:
         date = datetime(2027, 1, RNG.randint(3, 10))
-        while date.year == 2027:
+        # Generate entries through end of 2028 for current data
+        while date <= datetime(2028, 12, 31):
             entries.append(
                 [
                     date.strftime("%Y-%m-%d"),
@@ -439,7 +440,7 @@ def build_failure_log(pumps: List[dict]) -> None:
 
 
 def build_operation_log(pumps: List[dict]) -> None:
-    """Craft 30 days of historian-style samples with profile events per pump."""
+    """Craft ~6 months of historian-style samples with profile events per pump."""
 
     headers = [
         "timestamp",
@@ -455,10 +456,10 @@ def build_operation_log(pumps: List[dict]) -> None:
         "status",
     ]
 
-    start = datetime(2027, 7, 1, 0, 0)
+    start = datetime(2027, 1, 1, 0, 0)
     interval = timedelta(minutes=15)
     samples_per_day = int(timedelta(days=1) / interval)
-    horizon_days = 30
+    horizon_days = 180  # ~6 months
     total_samples = samples_per_day * horizon_days
 
     base_status_weights = {

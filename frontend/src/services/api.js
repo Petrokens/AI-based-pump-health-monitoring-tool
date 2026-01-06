@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 20000, // Increased to 20s for fast polling with large datasets
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,13 +15,18 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.message);
-    if (error.response) {
-      // Server responded with error status
-      console.error('Response error:', error.response.status, error.response.data);
-    } else if (error.request) {
-      // Request made but no response (likely backend not running)
-      console.error('No response from server. Is the backend running?');
+    // Only log timeout errors, not all errors (to reduce console spam)
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      console.warn('API request timeout - backend may be slow or overloaded');
+    } else {
+      console.error('API Error:', error.message);
+      if (error.response) {
+        // Server responded with error status
+        console.error('Response error:', error.response.status, error.response.data);
+      } else if (error.request) {
+        // Request made but no response (likely backend not running)
+        console.error('No response from server. Is the backend running?');
+      }
     }
     return Promise.reject(error);
   }
@@ -62,18 +67,21 @@ export const fetchDashboardSummary = async () => {
   return response.data;
 };
 
-export const fetchPumpOverview = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/overview`);
+export const fetchPumpOverview = async (pumpId, at) => {
+  const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
+  const response = await api.get(`/pump/${pumpId}/overview${atParam}`);
   return response.data;
 };
 
-export const fetchVibrationData = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/vibration`);
+export const fetchVibrationData = async (pumpId, at) => {
+  const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
+  const response = await api.get(`/pump/${pumpId}/vibration${atParam}`);
   return response.data;
 };
 
-export const fetchThermalData = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/thermal`);
+export const fetchThermalData = async (pumpId, at) => {
+  const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
+  const response = await api.get(`/pump/${pumpId}/thermal${atParam}`);
   return response.data;
 };
 
@@ -82,8 +90,9 @@ export const fetchElectricalData = async (pumpId) => {
   return response.data;
 };
 
-export const fetchHydraulicData = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/hydraulic`);
+export const fetchHydraulicData = async (pumpId, at) => {
+  const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
+  const response = await api.get(`/pump/${pumpId}/hydraulic${atParam}`);
   return response.data;
 };
 
@@ -125,6 +134,16 @@ export const fetchPumpRuntime = async (pumpId) => {
 
 export const controlPump = async (pumpId, action) => {
   const response = await api.post(`/pump/${pumpId}/control`, { action });
+  return response.data;
+};
+
+export const fetchFastForwardData = async (pumpId, speed = 100, windowHours = 6) => {
+  const response = await api.get(`/pump/${pumpId}/fast-forward?speed=${speed}&window_hours=${windowHours}`);
+  return response.data;
+};
+
+export const fetchDemoSimulation = async (pumpId) => {
+  const response = await api.get(`/pump/${pumpId}/demo-simulation`);
   return response.data;
 };
 

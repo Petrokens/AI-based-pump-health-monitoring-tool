@@ -16,7 +16,7 @@ const RealTimeParameters = ({ pumpId }) => {
 
   useEffect(() => {
     loadRealtimeData();
-    const interval = setInterval(loadRealtimeData, 2000);
+    const interval = setInterval(loadRealtimeData, 1000); // Update every 1 second for fast live reading
     return () => clearInterval(interval);
   }, [pumpId]);
 

@@ -38,7 +38,7 @@ const PumpRuntimePanel = ({ pumpId, onStatusChange }) => {
   useEffect(() => {
     setLoading(true);
     loadRuntime();
-    const interval = setInterval(loadRuntime, 15000);
+    const interval = setInterval(loadRuntime, 2000); // Update every 2 seconds for fast live reading
     return () => clearInterval(interval);
   }, [loadRuntime]);
 

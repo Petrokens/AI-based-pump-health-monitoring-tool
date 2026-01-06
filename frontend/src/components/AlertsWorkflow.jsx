@@ -30,8 +30,8 @@ const AlertsWorkflow = ({ pumpId }) => {
 
   if (loading || !data) {
     return (
-      <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-        <div className="animate-pulse">Loading alerts...</div>
+      <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--border-color)]">
+        <div className="animate-pulse text-[var(--text-secondary)]">Loading alerts...</div>
       </div>
     );
   }
@@ -57,26 +57,26 @@ const AlertsWorkflow = ({ pumpId }) => {
   const infoAlerts = data.alerts.filter(a => a.severity !== 'critical' && a.severity !== 'warning' && !acknowledged.has(a.id));
 
   return (
-    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6">
+    <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--border-color)] mb-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white flex items-center">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center">
           <Bell className="w-6 h-6 mr-2 text-primary-500" />
           Alerts & Workflows
         </h2>
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <p className="text-xs text-slate-400">Total Alerts</p>
-            <p className="text-2xl font-bold text-white">{data.total_alerts}</p>
+            <p className="text-xs text-[var(--text-secondary)]">Total Alerts</p>
+            <p className="text-2xl font-bold text-[var(--text-primary)]">{data.total_alerts}</p>
           </div>
           {data.critical_count > 0 && (
             <div className="text-right">
-              <p className="text-xs text-slate-400">Critical</p>
+              <p className="text-xs text-[var(--text-secondary)]">Critical</p>
               <p className="text-2xl font-bold text-red-400">{data.critical_count}</p>
             </div>
           )}
           {data.warning_count > 0 && (
             <div className="text-right">
-              <p className="text-xs text-slate-400">Warnings</p>
+              <p className="text-xs text-[var(--text-secondary)]">Warnings</p>
               <p className="text-2xl font-bold text-yellow-400">{data.warning_count}</p>
             </div>
           )}
@@ -94,30 +94,30 @@ const AlertsWorkflow = ({ pumpId }) => {
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
                       {getSeverityIcon(alert.severity)}
-                      <h4 className="text-white font-semibold ml-2">{alert.title}</h4>
+                      <h4 className="text-[var(--text-primary)] font-semibold ml-2">{alert.title}</h4>
                     </div>
-                    <p className="text-slate-300 text-sm mb-3">{alert.message}</p>
+                    <p className="text-[var(--text-secondary)] text-sm mb-3">{alert.message}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                       <div>
-                        <span className="text-slate-400">Responsible: </span>
-                        <span className="text-white">{alert.responsible}</span>
+                        <span className="text-[var(--text-secondary)]">Responsible: </span>
+                        <span className="text-[var(--text-primary)]">{alert.responsible}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400">Downtime: </span>
-                        <span className="text-white">{alert.estimated_downtime_hours}h</span>
+                        <span className="text-[var(--text-secondary)]">Downtime: </span>
+                        <span className="text-[var(--text-primary)]">{alert.estimated_downtime_hours}h</span>
                       </div>
                       <div>
-                        <span className="text-slate-400">Cost: </span>
-                        <span className="text-white">${alert.estimated_cost.toLocaleString()}</span>
+                        <span className="text-[var(--text-secondary)]">Cost: </span>
+                        <span className="text-[var(--text-primary)]">${alert.estimated_cost.toLocaleString()}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400">Time: </span>
-                        <span className="text-white">{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                        <span className="text-[var(--text-secondary)]">Time: </span>
+                        <span className="text-[var(--text-primary)]">{new Date(alert.timestamp).toLocaleTimeString()}</span>
                       </div>
                     </div>
-                    <div className="mt-3 p-3 bg-slate-900/50 rounded-lg">
-                      <p className="text-xs text-slate-400 mb-1">Recommended Action:</p>
-                      <p className="text-sm text-white">{alert.recommended_action}</p>
+                    <div className="mt-3 p-3 bg-[var(--bg-secondary)]/50 rounded-lg">
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Recommended Action:</p>
+                      <p className="text-sm text-[var(--text-primary)]">{alert.recommended_action}</p>
                     </div>
                   </div>
                   {!acknowledged.has(alert.id) && (
@@ -147,14 +147,14 @@ const AlertsWorkflow = ({ pumpId }) => {
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
                       {getSeverityIcon(alert.severity)}
-                      <h4 className="text-white font-semibold ml-2">{alert.title}</h4>
+                      <h4 className="text-[var(--text-primary)] font-semibold ml-2">{alert.title}</h4>
                     </div>
-                    <p className="text-slate-300 text-sm mb-2">{alert.message}</p>
-                    <div className="text-xs text-slate-400">
+                    <p className="text-[var(--text-secondary)] text-sm mb-2">{alert.message}</p>
+                    <div className="text-xs text-[var(--text-secondary)]">
                       {alert.responsible} • {new Date(alert.timestamp).toLocaleString()}
                     </div>
-                    <div className="mt-2 p-2 bg-slate-900/50 rounded">
-                      <p className="text-xs text-slate-400">Action: {alert.recommended_action}</p>
+                    <div className="mt-2 p-2 bg-[var(--bg-secondary)]/50 rounded">
+                      <p className="text-xs text-[var(--text-secondary)]">Action: {alert.recommended_action}</p>
                     </div>
                   </div>
                   {!acknowledged.has(alert.id) && (
@@ -183,14 +183,14 @@ const AlertsWorkflow = ({ pumpId }) => {
                   <div className="flex items-center">
                     {getSeverityIcon(alert.severity)}
                     <div className="ml-2">
-                      <p className="text-white text-sm font-medium">{alert.title}</p>
-                      <p className="text-slate-400 text-xs">{alert.message}</p>
+                      <p className="text-[var(--text-primary)] text-sm font-medium">{alert.title}</p>
+                      <p className="text-[var(--text-secondary)] text-xs">{alert.message}</p>
                     </div>
                   </div>
                   {!acknowledged.has(alert.id) && (
                     <button
                       onClick={() => handleAcknowledge(alert.id)}
-                      className="ml-4 px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs transition-colors"
+                      className="ml-4 px-2 py-1 bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] rounded text-xs transition-colors"
                     >
                       Dismiss
                     </button>
@@ -205,7 +205,7 @@ const AlertsWorkflow = ({ pumpId }) => {
       {data.alerts.length === 0 && (
         <div className="text-center py-12">
           <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-          <p className="text-slate-400">No active alerts</p>
+          <p className="text-[var(--text-secondary)]">No active alerts</p>
         </div>
       )}
     </div>

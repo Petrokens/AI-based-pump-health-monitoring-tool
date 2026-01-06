@@ -1,239 +1,469 @@
 date,pump_id,action,component,notes,downtime_hours
-2027-01-03,PU-205D,replace,general,Lubrication checklist signed by Unit 300 operator,8
-2027-01-03,PU-211K,repair,coupling,Seal plan 53A bladder charged to 30 psig,0
+2027-01-03,PU-206E,calibrate,alignment,Spacer coupling bolts retorqued to 95 ft-lbf,2
+2027-01-03,PU-211K,replace,seal,"API 610 route found axial vibration high, filter added",8
 2027-01-04,PU-201A,clean,seal,Lubricant sample sent to Chevron ASTM D4378 panel,12
-2027-01-05,PU-202B,calibrate,suction strainer,Suction basket flushed after filter DP alarm,1
-2027-01-05,PU-208G,inspect,alignment,Alignment check after suction header supports fixed,2
-2027-01-06,PU-203C,inspect,seal,Coupling elastomer spider swapped due to cracks,4
-2027-01-07,PU-204A,calibrate,impeller,Oil mist console differential pressure adjusted,12
-2027-01-07,PU-212L,calibrate,seal,Strainer pulled due to high fines load,2
-2027-01-08,PU-206E,inspect,alignment,Strainer differential reset after catalyst fines flush,2
-2027-01-08,PU-209H,inspect,impeller,Impeller vane leading edge blended to remove pitting,2
-2027-01-10,PU-207F,repair,bearing,High-energy vibration at 1x RPM investigated,12
-2027-01-10,PU-210J,clean,general,Split bearing shells inspected for wipe marks,1
-2027-01-13,PU-211K,inspect,bearing,Coupling hub fretting cleaned and anti-seize applied,12
+2027-01-04,PU-207F,repair,motor,Seal flush conductivity matched condensate spec,4
+2027-01-06,PU-202B,calibrate,bearing,"Motor IR scan performed, no hot spots",6
+2027-01-07,PU-209H,repair,impeller,Bearing housing vibration dropped below 3 mm/s,0
+2027-01-07,PU-210J,inspect,bearing,Split bearing shells inspected for wipe marks,2
+2027-01-08,PU-203C,repair,bearing,Laser alignment with Fixturlaser XA (within 0.05 mm),4
+2027-01-09,PU-204A,inspect,impeller,Impeller wear ring clearance checked with taper gauge,0
+2027-01-09,PU-205D,repair,bearing,Bearing housing desiccant breather replaced,12
+2027-01-09,PU-208G,calibrate,alignment,Impeller balancing weights verified after shop run,12
+2027-01-09,PU-212L,inspect,suction strainer,Seal pot nitrogen header leak repaired,2
+2027-01-18,PU-211K,inspect,bearing,Bearing pad thermocouples re-zeroed,6
 2027-01-20,PU-201A,repair,alignment,Shaft alignment checked after turbine outage,8
-2027-01-20,PU-204A,inspect,lubricant,Thermography noted 4 degC delta on DE bearing,12
-2027-01-22,PU-203C,repair,coupling,Cartridge seal faces dressed and leak-tested,4
-2027-01-24,PU-209H,repair,seal,Bearing housing vibration dropped below 3 mm/s,4
-2027-01-24,PU-212L,inspect,seal,Strainer pulled due to high fines load,2
-2027-01-26,PU-211K,calibrate,bearing,Bearing pad thermocouples re-zeroed,2
-2027-01-27,PU-202B,replace,suction strainer,"Motor IR scan performed, no hot spots",8
-2027-01-27,PU-208G,clean,alignment,Alignment check after suction header supports fixed,12
+2027-01-21,PU-207F,replace,motor,Motor winding surge test performed post rewind,12
+2027-01-23,PU-212L,inspect,suction strainer,Seal pot nitrogen header leak repaired,6
+2027-01-24,PU-204A,clean,impeller,Impeller wear ring clearance checked with taper gauge,4
+2027-01-26,PU-209H,repair,seal,Impeller vane leading edge blended to remove pitting,0
+2027-01-27,PU-203C,inspect,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),8
+2027-01-28,PU-202B,inspect,suction strainer,Route vibration per API 610 collected (2.8 mm/s overall),4
 2027-01-31,PU-201A,inspect,impeller,Lubricant sample sent to Chevron ASTM D4378 panel,0
-2027-02-01,PU-207F,repair,seal,Motor winding surge test performed post rewind,8
-2027-02-02,PU-205D,replace,general,Plan 11 flush restriction orifice cleaned,2
-2027-02-04,PU-204A,inspect,motor,Oil mist console differential pressure adjusted,12
-2027-02-05,PU-206E,inspect,alignment,Soft-foot eliminated after skid grout crack repair,0
-2027-02-06,PU-203C,repair,seal,Coupling elastomer spider swapped due to cracks,2
-2027-02-08,PU-210J,inspect,general,Skid drains cleared of condensate,8
-2027-02-10,PU-211K,calibrate,seal,"API 610 route found axial vibration high, filter added",6
-2027-02-10,PU-212L,clean,suction strainer,Strainer pulled due to high fines load,4
-2027-02-11,PU-209H,replace,seal,Impeller vane leading edge blended to remove pitting,1
-2027-02-16,PU-202B,calibrate,suction strainer,Bearing oil topped up with ISO 46 VG,4
+2027-01-31,PU-211K,inspect,bearing,Coupling hub fretting cleaned and anti-seize applied,2
+2027-02-01,PU-206E,inspect,coupling,Strainer differential reset after catalyst fines flush,12
+2027-02-02,PU-208G,inspect,alignment,Lube oil varnish potential measured (MPC=18),0
+2027-02-06,PU-212L,calibrate,suction strainer,Motor current signature analysis (no bar defects),0
+2027-02-07,PU-205D,repair,bearing,Lubrication checklist signed by Unit 300 operator,6
+2027-02-07,PU-210J,inspect,bearing,Split bearing shells inspected for wipe marks,8
+2027-02-08,PU-204A,clean,impeller,Oil mist console differential pressure adjusted,12
+2027-02-12,PU-207F,inspect,motor,Motor winding surge test performed post rewind,12
+2027-02-13,PU-211K,calibrate,coupling,"API 610 route found axial vibration high, filter added",4
+2027-02-14,PU-203C,inspect,bearing,Cartridge seal faces dressed and leak-tested,2
+2027-02-14,PU-209H,replace,seal,Bearing housing vibration dropped below 3 mm/s,0
 2027-02-17,PU-201A,inspect,seal,Impeller clearance reset per OEM tolerance,2
-2027-02-18,PU-204A,calibrate,impeller,Impeller wear ring clearance checked with taper gauge,8
-2027-02-19,PU-207F,repair,bearing,High-energy vibration at 1x RPM investigated,8
-2027-02-20,PU-208G,clean,alignment,Alignment check after suction header supports fixed,12
-2027-02-24,PU-203C,replace,bearing,Coupling elastomer spider swapped due to cracks,1
-2027-02-24,PU-211K,inspect,coupling,Coupling hub fretting cleaned and anti-seize applied,2
-2027-02-27,PU-212L,inspect,seal,Strainer pulled due to high fines load,4
-2027-03-02,PU-205D,inspect,general,Bearing housing desiccant breather replaced,6
-2027-03-02,PU-209H,inspect,impeller,Impeller vane leading edge blended to remove pitting,8
+2027-02-20,PU-202B,replace,suction strainer,Bearing oil topped up with ISO 46 VG,2
+2027-02-22,PU-211K,replace,alignment,Coupling hub fretting cleaned and anti-seize applied,0
+2027-02-22,PU-212L,clean,seal,Seal pot nitrogen header leak repaired,6
+2027-02-26,PU-208G,clean,lubricant,Lube oil varnish potential measured (MPC=18),8
+2027-02-27,PU-204A,clean,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),4
+2027-02-28,PU-206E,clean,suction strainer,Spacer coupling bolts retorqued to 95 ft-lbf,4
 2027-03-03,PU-201A,repair,alignment,Shaft alignment checked after turbine outage,2
-2027-03-05,PU-206E,calibrate,suction strainer,Soft-foot eliminated after skid grout crack repair,4
-2027-03-06,PU-204A,calibrate,lubricant,Thermography noted 4 degC delta on DE bearing,6
-2027-03-10,PU-202B,calibrate,bearing,"Motor IR scan performed, no hot spots",1
-2027-03-10,PU-207F,inspect,bearing,Motor winding surge test performed post rewind,2
-2027-03-10,PU-211K,inspect,coupling,Coupling hub fretting cleaned and anti-seize applied,1
-2027-03-12,PU-203C,repair,coupling,Laser alignment with Fixturlaser XA (within 0.05 mm),6
-2027-03-12,PU-212L,calibrate,suction strainer,Strainer pulled due to high fines load,4
-2027-03-13,PU-208G,clean,impeller,Lube oil varnish potential measured (MPC=18),6
-2027-03-13,PU-210J,inspect,bearing,Skid drains cleared of condensate,8
+2027-03-03,PU-207F,repair,seal,Seal flush conductivity matched condensate spec,4
+2027-03-04,PU-203C,inspect,bearing,Thrust bearing temperature trending 3 degC high,6
+2027-03-04,PU-205D,replace,general,Plan 11 flush restriction orifice cleaned,12
+2027-03-04,PU-209H,replace,bearing,Bearing housing vibration dropped below 3 mm/s,1
+2027-03-04,PU-211K,calibrate,bearing,Coupling hub fretting cleaned and anti-seize applied,2
+2027-03-11,PU-202B,replace,suction strainer,Bearing oil topped up with ISO 46 VG,1
+2027-03-11,PU-210J,inspect,bearing,Split bearing shells inspected for wipe marks,6
+2027-03-11,PU-212L,clean,suction strainer,Motor current signature analysis (no bar defects),0
+2027-03-12,PU-204A,calibrate,lubricant,Motor insulation DAR ratio recorded 1.6 (acceptable),2
+2027-03-15,PU-211K,replace,bearing,Bearing pad thermocouples re-zeroed,12
 2027-03-16,PU-201A,inspect,alignment,Seal Plan 32 flow verified against refinery spec,6
-2027-03-19,PU-204A,inspect,motor,Impeller wear ring clearance checked with taper gauge,6
-2027-03-20,PU-209H,replace,impeller,Seal support pot level corrected to 70%,4
-2027-03-23,PU-211K,inspect,coupling,"API 610 route found axial vibration high, filter added",4
-2027-03-26,PU-212L,calibrate,motor,Strainer pulled due to high fines load,1
-2027-03-28,PU-202B,calibrate,bearing,"Motor IR scan performed, no hot spots",6
-2027-03-29,PU-205D,replace,seal,Lubrication checklist signed by Unit 300 operator,2
-2027-03-31,PU-207F,inspect,motor,High-energy vibration at 1x RPM investigated,1
+2027-03-21,PU-203C,replace,coupling,Thrust bearing temperature trending 3 degC high,6
+2027-03-21,PU-208G,calibrate,alignment,Lube oil varnish potential measured (MPC=18),2
+2027-03-22,PU-209H,replace,impeller,Impeller vane leading edge blended to remove pitting,6
+2027-03-23,PU-212L,clean,suction strainer,Seal pot nitrogen header leak repaired,0
+2027-03-25,PU-207F,inspect,bearing,Seal flush conductivity matched condensate spec,12
+2027-03-26,PU-204A,calibrate,motor,Motor insulation DAR ratio recorded 1.6 (acceptable),12
+2027-03-26,PU-211K,inspect,seal,"API 610 route found axial vibration high, filter added",2
+2027-03-27,PU-206E,inspect,suction strainer,Spacer coupling bolts retorqued to 95 ft-lbf,6
+2027-03-30,PU-205D,replace,seal,Bearing housing desiccant breather replaced,8
+2027-03-31,PU-202B,calibrate,bearing,Bearing oil topped up with ISO 46 VG,4
 2027-04-01,PU-201A,inspect,impeller,Shaft alignment checked after turbine outage,4
-2027-04-01,PU-203C,replace,coupling,Thrust bearing temperature trending 3 degC high,0
-2027-04-01,PU-204A,clean,lubricant,Impeller wear ring clearance checked with taper gauge,4
-2027-04-03,PU-208G,clean,impeller,Lube oil varnish potential measured (MPC=18),0
-2027-04-04,PU-206E,clean,suction strainer,Soft-foot eliminated after skid grout crack repair,8
-2027-04-04,PU-211K,calibrate,seal,"API 610 route found axial vibration high, filter added",1
-2027-04-08,PU-209H,replace,impeller,Seal support pot level corrected to 70%,2
-2027-04-10,PU-212L,calibrate,motor,Seal pot nitrogen header leak repaired,0
-2027-04-14,PU-210J,clean,lubricant,Operator completed lube round (ISO 22 synthetic),12
+2027-04-04,PU-211K,calibrate,seal,Seal plan 53A bladder charged to 30 psig,8
+2027-04-04,PU-212L,inspect,motor,Strainer pulled due to high fines load,2
+2027-04-07,PU-203C,replace,seal,Thrust bearing temperature trending 3 degC high,4
+2027-04-08,PU-204A,inspect,motor,Motor insulation DAR ratio recorded 1.6 (acceptable),6
+2027-04-11,PU-208G,calibrate,impeller,Alignment check after suction header supports fixed,0
+2027-04-12,PU-209H,repair,seal,Impeller vane leading edge blended to remove pitting,6
+2027-04-14,PU-210J,inspect,lubricant,Operator completed lube round (ISO 22 synthetic),12
 2027-04-15,PU-201A,clean,impeller,Lubricant sample sent to Chevron ASTM D4378 panel,12
-2027-04-15,PU-204A,inspect,impeller,Oil mist console differential pressure adjusted,12
-2027-04-15,PU-211K,replace,bearing,"API 610 route found axial vibration high, filter added",8
-2027-04-16,PU-202B,inspect,bearing,Route vibration per API 610 collected (2.8 mm/s overall),1
-2027-04-16,PU-203C,replace,seal,Cartridge seal faces dressed and leak-tested,0
-2027-04-20,PU-207F,replace,motor,Seal flush conductivity matched condensate spec,1
-2027-04-23,PU-212L,clean,seal,Strainer pulled due to high fines load,12
-2027-04-25,PU-211K,replace,coupling,Bearing pad thermocouples re-zeroed,0
-2027-04-27,PU-205D,repair,general,Bearing housing desiccant breather replaced,2
-2027-04-30,PU-208G,calibrate,impeller,Impeller balancing weights verified after shop run,1
-2027-04-30,PU-209H,inspect,bearing,Seal support pot level corrected to 70%,4
+2027-04-15,PU-207F,repair,bearing,Seal flush conductivity matched condensate spec,8
+2027-04-17,PU-212L,calibrate,suction strainer,Motor current signature analysis (no bar defects),6
+2027-04-19,PU-211K,repair,seal,"API 610 route found axial vibration high, filter added",6
+2027-04-20,PU-202B,inspect,bearing,Suction basket flushed after filter DP alarm,6
+2027-04-22,PU-204A,inspect,motor,Thermography noted 4 degC delta on DE bearing,8
+2027-04-24,PU-205D,inspect,seal,Plan 11 flush restriction orifice cleaned,6
+2027-04-27,PU-203C,repair,bearing,Cartridge seal faces dressed and leak-tested,1
+2027-04-29,PU-206E,calibrate,suction strainer,Spacer coupling bolts retorqued to 95 ft-lbf,12
+2027-04-29,PU-212L,clean,seal,Seal pot nitrogen header leak repaired,2
+2027-04-30,PU-209H,repair,impeller,Impeller vane leading edge blended to remove pitting,4
 2027-05-02,PU-201A,inspect,impeller,Seal Plan 32 flow verified against refinery spec,12
-2027-05-04,PU-202B,inspect,motor,Route vibration per API 610 collected (2.8 mm/s overall),6
-2027-05-04,PU-204A,inspect,impeller,Impeller wear ring clearance checked with taper gauge,8
-2027-05-05,PU-203C,inspect,coupling,Laser alignment with Fixturlaser XA (within 0.05 mm),6
-2027-05-06,PU-206E,calibrate,coupling,Spacer coupling bolts retorqued to 95 ft-lbf,1
-2027-05-07,PU-207F,repair,bearing,Motor winding surge test performed post rewind,6
-2027-05-07,PU-212L,calibrate,suction strainer,Strainer pulled due to high fines load,1
-2027-05-08,PU-211K,repair,coupling,Seal plan 53A bladder charged to 30 psig,12
+2027-05-03,PU-211K,repair,seal,Seal plan 53A bladder charged to 30 psig,8
+2027-05-05,PU-204A,calibrate,motor,Thermography noted 4 degC delta on DE bearing,8
+2027-05-06,PU-208G,calibrate,alignment,Lube oil varnish potential measured (MPC=18),1
+2027-05-08,PU-207F,repair,seal,High-energy vibration at 1x RPM investigated,6
+2027-05-12,PU-202B,inspect,bearing,"Motor IR scan performed, no hot spots",6
+2027-05-13,PU-212L,inspect,suction strainer,Motor current signature analysis (no bar defects),6
 2027-05-15,PU-201A,clean,alignment,Seal Plan 32 flow verified against refinery spec,1
-2027-05-17,PU-209H,repair,impeller,Impeller vane leading edge blended to remove pitting,8
-2027-05-17,PU-210J,clean,bearing,Skid drains cleared of condensate,2
-2027-05-18,PU-204A,calibrate,motor,Oil mist console differential pressure adjusted,12
-2027-05-18,PU-211K,inspect,alignment,Coupling hub fretting cleaned and anti-seize applied,12
-2027-05-20,PU-203C,replace,coupling,Coupling elastomer spider swapped due to cracks,0
-2027-05-21,PU-212L,inspect,motor,Strainer pulled due to high fines load,6
-2027-05-22,PU-208G,inspect,lubricant,Impeller balancing weights verified after shop run,1
-2027-05-23,PU-202B,calibrate,suction strainer,Suction basket flushed after filter DP alarm,1
-2027-05-25,PU-205D,replace,bearing,Lubrication checklist signed by Unit 300 operator,1
-2027-05-27,PU-207F,repair,motor,High-energy vibration at 1x RPM investigated,12
-2027-05-29,PU-211K,replace,bearing,"API 610 route found axial vibration high, filter added",4
+2027-05-15,PU-203C,replace,seal,Cartridge seal faces dressed and leak-tested,6
+2027-05-16,PU-209H,replace,bearing,Impeller vane leading edge blended to remove pitting,8
+2027-05-17,PU-211K,calibrate,coupling,"API 610 route found axial vibration high, filter added",2
+2027-05-18,PU-210J,clean,bearing,Split bearing shells inspected for wipe marks,12
+2027-05-19,PU-205D,inspect,seal,Bearing housing desiccant breather replaced,4
+2027-05-20,PU-204A,clean,motor,Motor insulation DAR ratio recorded 1.6 (acceptable),12
+2027-05-25,PU-207F,inspect,seal,Seal flush conductivity matched condensate spec,2
+2027-05-26,PU-206E,inspect,coupling,Strainer differential reset after catalyst fines flush,1
+2027-05-26,PU-212L,calibrate,seal,Strainer pulled due to high fines load,2
 2027-05-30,PU-201A,repair,alignment,Shaft alignment checked after turbine outage,8
-2027-06-03,PU-206E,clean,suction strainer,Soft-foot eliminated after skid grout crack repair,12
-2027-06-03,PU-212L,inspect,seal,Motor current signature analysis (no bar defects),6
-2027-06-04,PU-204A,clean,lubricant,Impeller wear ring clearance checked with taper gauge,1
-2027-06-05,PU-209H,repair,bearing,Seal support pot level corrected to 70%,12
-2027-06-08,PU-203C,inspect,bearing,Laser alignment with Fixturlaser XA (within 0.05 mm),6
-2027-06-12,PU-211K,replace,bearing,Seal plan 53A bladder charged to 30 psig,6
+2027-05-30,PU-211K,calibrate,seal,Coupling hub fretting cleaned and anti-seize applied,8
+2027-06-01,PU-202B,inspect,motor,Route vibration per API 610 collected (2.8 mm/s overall),1
+2027-06-01,PU-208G,inspect,lubricant,Alignment check after suction header supports fixed,8
+2027-06-03,PU-203C,repair,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),2
+2027-06-07,PU-209H,replace,impeller,Bearing housing vibration dropped below 3 mm/s,4
+2027-06-07,PU-212L,inspect,motor,Strainer pulled due to high fines load,1
+2027-06-08,PU-204A,inspect,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),6
+2027-06-12,PU-207F,replace,motor,Motor winding surge test performed post rewind,0
 2027-06-13,PU-201A,clean,lubricant,Shaft alignment checked after turbine outage,2
-2027-06-13,PU-208G,clean,lubricant,Impeller balancing weights verified after shop run,6
-2027-06-14,PU-202B,inspect,suction strainer,Suction basket flushed after filter DP alarm,1
-2027-06-16,PU-207F,repair,seal,Seal flush conductivity matched condensate spec,0
-2027-06-16,PU-210J,clean,bearing,Split bearing shells inspected for wipe marks,0
-2027-06-17,PU-212L,inspect,suction strainer,Motor current signature analysis (no bar defects),4
-2027-06-20,PU-205D,repair,general,Bearing housing desiccant breather replaced,8
-2027-06-23,PU-203C,repair,bearing,Thrust bearing temperature trending 3 degC high,2
-2027-06-23,PU-204A,inspect,motor,Thermography noted 4 degC delta on DE bearing,0
-2027-06-23,PU-209H,inspect,seal,Bearing housing vibration dropped below 3 mm/s,2
+2027-06-13,PU-211K,inspect,bearing,Seal plan 53A bladder charged to 30 psig,0
+2027-06-18,PU-205D,replace,bearing,Bearing housing desiccant breather replaced,0
+2027-06-20,PU-203C,inspect,seal,Thrust bearing temperature trending 3 degC high,4
+2027-06-21,PU-202B,calibrate,bearing,Suction basket flushed after filter DP alarm,12
+2027-06-21,PU-204A,clean,lubricant,Thermography noted 4 degC delta on DE bearing,4
+2027-06-21,PU-210J,inspect,general,Skid drains cleared of condensate,4
+2027-06-21,PU-212L,clean,seal,Strainer pulled due to high fines load,0
+2027-06-24,PU-206E,calibrate,suction strainer,Spacer coupling bolts retorqued to 95 ft-lbf,0
+2027-06-24,PU-208G,calibrate,alignment,Impeller balancing weights verified after shop run,1
+2027-06-24,PU-211K,replace,coupling,Coupling hub fretting cleaned and anti-seize applied,2
 2027-06-25,PU-201A,inspect,alignment,Impeller clearance reset per OEM tolerance,6
-2027-06-25,PU-211K,calibrate,bearing,"API 610 route found axial vibration high, filter added",6
-2027-07-04,PU-211K,calibrate,seal,Seal plan 53A bladder charged to 30 psig,0
-2027-07-04,PU-212L,clean,motor,Motor current signature analysis (no bar defects),4
-2027-07-05,PU-208G,clean,lubricant,Alignment check after suction header supports fixed,12
-2027-07-06,PU-206E,inspect,coupling,Soft-foot eliminated after skid grout crack repair,1
-2027-07-07,PU-204A,calibrate,impeller,Thermography noted 4 degC delta on DE bearing,12
-2027-07-08,PU-202B,calibrate,motor,"Motor IR scan performed, no hot spots",0
+2027-06-26,PU-209H,inspect,seal,Seal support pot level corrected to 70%,12
+2027-07-04,PU-212L,calibrate,suction strainer,Seal pot nitrogen header leak repaired,1
+2027-07-05,PU-207F,replace,seal,High-energy vibration at 1x RPM investigated,4
+2027-07-08,PU-203C,repair,bearing,Cartridge seal faces dressed and leak-tested,6
 2027-07-09,PU-201A,clean,impeller,Shaft alignment checked after turbine outage,6
-2027-07-09,PU-203C,replace,bearing,Thrust bearing temperature trending 3 degC high,1
-2027-07-09,PU-207F,replace,bearing,Motor winding surge test performed post rewind,0
-2027-07-13,PU-211K,repair,alignment,Seal plan 53A bladder charged to 30 psig,6
-2027-07-15,PU-209H,repair,seal,Seal support pot level corrected to 70%,6
-2027-07-20,PU-205D,inspect,general,Lubrication checklist signed by Unit 300 operator,2
-2027-07-20,PU-210J,inspect,general,Skid drains cleared of condensate,0
-2027-07-21,PU-212L,calibrate,seal,Strainer pulled due to high fines load,8
-2027-07-22,PU-211K,repair,bearing,Bearing pad thermocouples re-zeroed,2
+2027-07-09,PU-204A,inspect,motor,Impeller wear ring clearance checked with taper gauge,0
+2027-07-09,PU-211K,calibrate,coupling,Coupling hub fretting cleaned and anti-seize applied,1
+2027-07-13,PU-202B,replace,motor,Route vibration per API 610 collected (2.8 mm/s overall),8
+2027-07-14,PU-205D,repair,general,Bearing housing desiccant breather replaced,8
+2027-07-15,PU-208G,inspect,alignment,Alignment check after suction header supports fixed,0
+2027-07-15,PU-209H,repair,seal,Impeller vane leading edge blended to remove pitting,0
+2027-07-19,PU-211K,inspect,seal,"API 610 route found axial vibration high, filter added",6
+2027-07-19,PU-212L,calibrate,suction strainer,Seal pot nitrogen header leak repaired,1
+2027-07-20,PU-210J,clean,lubricant,Split bearing shells inspected for wipe marks,6
+2027-07-21,PU-206E,clean,suction strainer,Soft-foot eliminated after skid grout crack repair,8
 2027-07-23,PU-201A,inspect,seal,Seal Plan 32 flow verified against refinery spec,1
-2027-07-25,PU-204A,calibrate,motor,Oil mist console differential pressure adjusted,1
-2027-07-26,PU-202B,replace,motor,Bearing oil topped up with ISO 46 VG,4
-2027-07-26,PU-203C,repair,coupling,Thrust bearing temperature trending 3 degC high,4
-2027-07-28,PU-207F,repair,bearing,Motor winding surge test performed post rewind,6
-2027-07-28,PU-208G,inspect,lubricant,Lube oil varnish potential measured (MPC=18),8
-2027-08-01,PU-211K,calibrate,bearing,"API 610 route found axial vibration high, filter added",4
-2027-08-04,PU-212L,clean,motor,Seal pot nitrogen header leak repaired,12
-2027-08-05,PU-209H,repair,impeller,Bearing housing vibration dropped below 3 mm/s,6
+2027-07-23,PU-207F,replace,bearing,High-energy vibration at 1x RPM investigated,0
+2027-07-26,PU-203C,replace,coupling,Laser alignment with Fixturlaser XA (within 0.05 mm),2
+2027-07-27,PU-204A,clean,lubricant,Motor insulation DAR ratio recorded 1.6 (acceptable),12
+2027-07-30,PU-212L,inspect,motor,Seal pot nitrogen header leak repaired,1
+2027-08-02,PU-209H,repair,seal,Impeller vane leading edge blended to remove pitting,2
+2027-08-03,PU-211K,inspect,seal,Coupling hub fretting cleaned and anti-seize applied,6
+2027-08-05,PU-208G,inspect,lubricant,Impeller balancing weights verified after shop run,4
+2027-08-06,PU-202B,replace,motor,Route vibration per API 610 collected (2.8 mm/s overall),1
 2027-08-08,PU-201A,inspect,lubricant,Seal Plan 32 flow verified against refinery spec,4
-2027-08-08,PU-206E,clean,suction strainer,Spacer coupling bolts retorqued to 95 ft-lbf,0
-2027-08-12,PU-203C,inspect,coupling,Coupling elastomer spider swapped due to cracks,6
-2027-08-12,PU-211K,calibrate,seal,Seal plan 53A bladder charged to 30 psig,8
-2027-08-13,PU-204A,calibrate,motor,Thermography noted 4 degC delta on DE bearing,12
-2027-08-16,PU-202B,calibrate,suction strainer,Route vibration per API 610 collected (2.8 mm/s overall),8
-2027-08-17,PU-205D,replace,seal,Bearing housing desiccant breather replaced,2
-2027-08-19,PU-207F,replace,seal,Seal flush conductivity matched condensate spec,1
-2027-08-20,PU-212L,clean,seal,Seal pot nitrogen header leak repaired,8
-2027-08-21,PU-211K,repair,seal,Bearing pad thermocouples re-zeroed,8
+2027-08-11,PU-207F,inspect,bearing,Motor winding surge test performed post rewind,2
+2027-08-13,PU-204A,inspect,impeller,Thermography noted 4 degC delta on DE bearing,8
+2027-08-14,PU-203C,replace,bearing,Thrust bearing temperature trending 3 degC high,0
+2027-08-14,PU-205D,repair,seal,Lubrication checklist signed by Unit 300 operator,1
+2027-08-15,PU-211K,repair,coupling,Coupling hub fretting cleaned and anti-seize applied,12
+2027-08-15,PU-212L,calibrate,motor,Strainer pulled due to high fines load,12
+2027-08-18,PU-206E,calibrate,suction strainer,Soft-foot eliminated after skid grout crack repair,6
+2027-08-20,PU-209H,inspect,impeller,Seal support pot level corrected to 70%,0
+2027-08-21,PU-210J,clean,general,Skid drains cleared of condensate,4
 2027-08-22,PU-201A,repair,lubricant,Lubricant sample sent to Chevron ASTM D4378 panel,6
-2027-08-22,PU-209H,inspect,bearing,Impeller vane leading edge blended to remove pitting,4
-2027-08-22,PU-210J,clean,lubricant,Skid drains cleared of condensate,8
-2027-08-23,PU-208G,inspect,impeller,Alignment check after suction header supports fixed,0
-2027-08-26,PU-204A,clean,motor,Impeller wear ring clearance checked with taper gauge,12
-2027-08-31,PU-203C,inspect,coupling,Cartridge seal faces dressed and leak-tested,6
-2027-09-02,PU-211K,replace,bearing,"API 610 route found axial vibration high, filter added",4
-2027-09-05,PU-212L,calibrate,suction strainer,Motor current signature analysis (no bar defects),6
+2027-08-26,PU-202B,inspect,bearing,"Motor IR scan performed, no hot spots",2
+2027-08-28,PU-204A,inspect,lubricant,Oil mist console differential pressure adjusted,0
+2027-08-28,PU-212L,clean,seal,Strainer pulled due to high fines load,0
+2027-08-29,PU-208G,clean,lubricant,Lube oil varnish potential measured (MPC=18),8
+2027-08-29,PU-211K,repair,bearing,"API 610 route found axial vibration high, filter added",4
+2027-08-31,PU-207F,inspect,motor,Seal flush conductivity matched condensate spec,4
+2027-09-04,PU-203C,inspect,bearing,Thrust bearing temperature trending 3 degC high,1
+2027-09-05,PU-209H,inspect,bearing,Seal support pot level corrected to 70%,0
 2027-09-08,PU-201A,inspect,seal,Lubricant sample sent to Chevron ASTM D4378 panel,12
-2027-09-08,PU-202B,replace,bearing,Route vibration per API 610 collected (2.8 mm/s overall),4
-2027-09-08,PU-206E,inspect,alignment,Spacer coupling bolts retorqued to 95 ft-lbf,1
-2027-09-08,PU-207F,inspect,bearing,Motor winding surge test performed post rewind,4
-2027-09-10,PU-209H,replace,bearing,Impeller vane leading edge blended to remove pitting,4
-2027-09-11,PU-204A,clean,impeller,Impeller wear ring clearance checked with taper gauge,1
-2027-09-11,PU-211K,replace,seal,Seal plan 53A bladder charged to 30 psig,0
-2027-09-12,PU-205D,repair,general,Lubrication checklist signed by Unit 300 operator,8
-2027-09-16,PU-212L,inspect,suction strainer,Strainer pulled due to high fines load,2
-2027-09-17,PU-203C,inspect,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),1
-2027-09-17,PU-208G,inspect,alignment,Lube oil varnish potential measured (MPC=18),8
+2027-09-09,PU-211K,repair,bearing,Seal plan 53A bladder charged to 30 psig,12
+2027-09-10,PU-205D,replace,general,Lubrication checklist signed by Unit 300 operator,12
+2027-09-12,PU-212L,clean,seal,Seal pot nitrogen header leak repaired,12
+2027-09-15,PU-202B,replace,bearing,Bearing oil topped up with ISO 46 VG,1
+2027-09-16,PU-204A,clean,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),4
+2027-09-17,PU-206E,inspect,alignment,Soft-foot eliminated after skid grout crack repair,4
+2027-09-19,PU-210J,clean,bearing,Operator completed lube round (ISO 22 synthetic),4
+2027-09-21,PU-207F,replace,motor,High-energy vibration at 1x RPM investigated,1
+2027-09-23,PU-208G,clean,lubricant,Lube oil varnish potential measured (MPC=18),8
+2027-09-23,PU-211K,calibrate,coupling,Coupling hub fretting cleaned and anti-seize applied,2
 2027-09-24,PU-201A,clean,seal,Lubricant sample sent to Chevron ASTM D4378 panel,4
-2027-09-24,PU-204A,calibrate,motor,Thermography noted 4 degC delta on DE bearing,2
-2027-09-25,PU-207F,repair,bearing,Seal flush conductivity matched condensate spec,8
-2027-09-26,PU-210J,clean,bearing,Skid drains cleared of condensate,6
-2027-09-26,PU-211K,calibrate,alignment,Bearing pad thermocouples re-zeroed,4
-2027-09-28,PU-212L,clean,motor,Seal pot nitrogen header leak repaired,0
-2027-10-01,PU-202B,calibrate,bearing,"Motor IR scan performed, no hot spots",1
-2027-10-01,PU-209H,replace,seal,Seal support pot level corrected to 70%,12
-2027-10-04,PU-203C,repair,coupling,Coupling elastomer spider swapped due to cracks,12
-2027-10-05,PU-211K,repair,seal,Bearing pad thermocouples re-zeroed,8
+2027-09-24,PU-212L,clean,suction strainer,Strainer pulled due to high fines load,8
+2027-09-25,PU-203C,inspect,coupling,Laser alignment with Fixturlaser XA (within 0.05 mm),0
+2027-09-26,PU-209H,replace,seal,Bearing housing vibration dropped below 3 mm/s,6
+2027-10-01,PU-204A,calibrate,impeller,Impeller wear ring clearance checked with taper gauge,4
 2027-10-06,PU-201A,clean,seal,Lubricant sample sent to Chevron ASTM D4378 panel,6
-2027-10-09,PU-204A,inspect,impeller,Oil mist console differential pressure adjusted,8
-2027-10-09,PU-205D,repair,bearing,Bearing housing desiccant breather replaced,8
-2027-10-11,PU-206E,calibrate,suction strainer,Strainer differential reset after catalyst fines flush,6
-2027-10-11,PU-208G,clean,lubricant,Impeller balancing weights verified after shop run,0
-2027-10-15,PU-212L,clean,suction strainer,Motor current signature analysis (no bar defects),4
-2027-10-17,PU-209H,inspect,seal,Bearing housing vibration dropped below 3 mm/s,4
-2027-10-17,PU-211K,inspect,coupling,Seal plan 53A bladder charged to 30 psig,6
-2027-10-18,PU-207F,repair,seal,High-energy vibration at 1x RPM investigated,12
-2027-10-20,PU-202B,replace,motor,"Motor IR scan performed, no hot spots",4
+2027-10-06,PU-205D,repair,seal,Lubrication checklist signed by Unit 300 operator,1
+2027-10-06,PU-212L,calibrate,suction strainer,Motor current signature analysis (no bar defects),0
+2027-10-08,PU-202B,replace,motor,Suction basket flushed after filter DP alarm,2
+2027-10-08,PU-207F,replace,bearing,Seal flush conductivity matched condensate spec,8
+2027-10-08,PU-211K,calibrate,coupling,Seal plan 53A bladder charged to 30 psig,8
+2027-10-11,PU-203C,repair,bearing,Laser alignment with Fixturlaser XA (within 0.05 mm),4
+2027-10-12,PU-209H,replace,impeller,Impeller vane leading edge blended to remove pitting,2
+2027-10-14,PU-206E,clean,alignment,Spacer coupling bolts retorqued to 95 ft-lbf,8
+2027-10-15,PU-204A,calibrate,lubricant,Oil mist console differential pressure adjusted,6
+2027-10-15,PU-208G,clean,lubricant,Impeller balancing weights verified after shop run,12
+2027-10-18,PU-212L,inspect,motor,Seal pot nitrogen header leak repaired,0
+2027-10-21,PU-211K,calibrate,bearing,Seal plan 53A bladder charged to 30 psig,12
 2027-10-23,PU-201A,inspect,seal,Lubricant sample sent to Chevron ASTM D4378 panel,12
-2027-10-23,PU-203C,replace,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),8
-2027-10-26,PU-204A,clean,lubricant,Oil mist console differential pressure adjusted,0
-2027-10-27,PU-210J,clean,general,Split bearing shells inspected for wipe marks,2
-2027-10-27,PU-211K,replace,bearing,Bearing pad thermocouples re-zeroed,0
-2027-10-27,PU-212L,clean,seal,Motor current signature analysis (no bar defects),0
-2027-11-04,PU-205D,replace,bearing,Lubrication checklist signed by Unit 300 operator,1
-2027-11-05,PU-208G,calibrate,lubricant,Impeller balancing weights verified after shop run,0
-2027-11-05,PU-211K,repair,coupling,Seal plan 53A bladder charged to 30 psig,6
-2027-11-07,PU-207F,inspect,seal,Seal flush conductivity matched condensate spec,0
-2027-11-07,PU-209H,inspect,seal,Impeller vane leading edge blended to remove pitting,6
+2027-10-24,PU-210J,clean,bearing,Split bearing shells inspected for wipe marks,12
+2027-10-26,PU-207F,repair,seal,High-energy vibration at 1x RPM investigated,1
+2027-10-29,PU-203C,replace,bearing,Cartridge seal faces dressed and leak-tested,8
+2027-10-31,PU-212L,clean,suction strainer,Seal pot nitrogen header leak repaired,4
+2027-11-01,PU-202B,inspect,bearing,Suction basket flushed after filter DP alarm,12
+2027-11-02,PU-209H,inspect,seal,Seal support pot level corrected to 70%,12
+2027-11-02,PU-211K,calibrate,coupling,Coupling hub fretting cleaned and anti-seize applied,12
+2027-11-03,PU-204A,calibrate,impeller,Thermography noted 4 degC delta on DE bearing,4
+2027-11-05,PU-205D,inspect,bearing,Plan 11 flush restriction orifice cleaned,0
 2027-11-08,PU-201A,repair,impeller,Shaft alignment checked after turbine outage,2
-2027-11-08,PU-202B,calibrate,motor,"Motor IR scan performed, no hot spots",12
-2027-11-08,PU-204A,clean,motor,Oil mist console differential pressure adjusted,0
-2027-11-09,PU-212L,inspect,seal,Seal pot nitrogen header leak repaired,2
-2027-11-11,PU-206E,calibrate,coupling,Strainer differential reset after catalyst fines flush,12
-2027-11-13,PU-203C,replace,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),1
-2027-11-14,PU-211K,calibrate,alignment,Coupling hub fretting cleaned and anti-seize applied,12
-2027-11-21,PU-204A,calibrate,impeller,Oil mist console differential pressure adjusted,8
-2027-11-23,PU-211K,calibrate,alignment,Coupling hub fretting cleaned and anti-seize applied,4
-2027-11-23,PU-212L,inspect,motor,Strainer pulled due to high fines load,4
+2027-11-08,PU-208G,calibrate,alignment,Alignment check after suction header supports fixed,0
+2027-11-12,PU-206E,clean,suction strainer,Spacer coupling bolts retorqued to 95 ft-lbf,4
+2027-11-15,PU-207F,replace,bearing,Motor winding surge test performed post rewind,2
+2027-11-15,PU-211K,repair,seal,"API 610 route found axial vibration high, filter added",8
+2027-11-17,PU-212L,clean,motor,Strainer pulled due to high fines load,0
+2027-11-18,PU-203C,repair,seal,Coupling elastomer spider swapped due to cracks,1
+2027-11-21,PU-202B,inspect,bearing,Bearing oil topped up with ISO 46 VG,12
+2027-11-22,PU-204A,calibrate,lubricant,Oil mist console differential pressure adjusted,2
+2027-11-22,PU-210J,inspect,general,Operator completed lube round (ISO 22 synthetic),4
+2027-11-23,PU-209H,repair,impeller,Bearing housing vibration dropped below 3 mm/s,2
 2027-11-25,PU-201A,inspect,seal,Lubricant sample sent to Chevron ASTM D4378 panel,4
-2027-11-25,PU-209H,repair,impeller,Impeller vane leading edge blended to remove pitting,2
-2027-11-26,PU-202B,calibrate,suction strainer,Route vibration per API 610 collected (2.8 mm/s overall),0
-2027-11-26,PU-210J,inspect,general,Split bearing shells inspected for wipe marks,0
-2027-11-27,PU-207F,replace,seal,Seal flush conductivity matched condensate spec,0
-2027-11-30,PU-203C,inspect,coupling,Cartridge seal faces dressed and leak-tested,2
-2027-12-01,PU-208G,clean,lubricant,Lube oil varnish potential measured (MPC=18),12
-2027-12-04,PU-205D,inspect,bearing,Lubrication checklist signed by Unit 300 operator,8
+2027-11-27,PU-211K,replace,alignment,"API 610 route found axial vibration high, filter added",2
+2027-11-28,PU-212L,calibrate,seal,Strainer pulled due to high fines load,8
+2027-11-30,PU-205D,inspect,bearing,Lubrication checklist signed by Unit 300 operator,8
+2027-12-04,PU-203C,replace,bearing,Laser alignment with Fixturlaser XA (within 0.05 mm),12
+2027-12-04,PU-208G,clean,impeller,Alignment check after suction header supports fixed,4
 2027-12-06,PU-201A,inspect,alignment,Lubricant sample sent to Chevron ASTM D4378 panel,1
-2027-12-07,PU-211K,replace,seal,Bearing pad thermocouples re-zeroed,12
-2027-12-08,PU-212L,clean,motor,Motor current signature analysis (no bar defects),1
-2027-12-10,PU-204A,clean,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),4
-2027-12-13,PU-206E,clean,coupling,Strainer differential reset after catalyst fines flush,4
-2027-12-14,PU-207F,replace,bearing,High-energy vibration at 1x RPM investigated,12
-2027-12-14,PU-209H,replace,impeller,Seal support pot level corrected to 70%,2
+2027-12-06,PU-211K,repair,seal,Bearing pad thermocouples re-zeroed,6
+2027-12-07,PU-207F,inspect,bearing,Motor winding surge test performed post rewind,8
+2027-12-10,PU-202B,replace,motor,"Motor IR scan performed, no hot spots",8
+2027-12-11,PU-204A,inspect,motor,Oil mist console differential pressure adjusted,4
+2027-12-12,PU-212L,clean,seal,Seal pot nitrogen header leak repaired,12
+2027-12-13,PU-209H,repair,seal,Bearing housing vibration dropped below 3 mm/s,6
+2027-12-15,PU-206E,calibrate,coupling,Soft-foot eliminated after skid grout crack repair,4
+2027-12-16,PU-211K,calibrate,alignment,Coupling hub fretting cleaned and anti-seize applied,12
 2027-12-17,PU-201A,inspect,seal,Seal Plan 32 flow verified against refinery spec,8
-2027-12-17,PU-203C,replace,coupling,Thrust bearing temperature trending 3 degC high,1
-2027-12-19,PU-202B,replace,bearing,Route vibration per API 610 collected (2.8 mm/s overall),12
-2027-12-19,PU-211K,calibrate,coupling,Bearing pad thermocouples re-zeroed,6
-2027-12-19,PU-212L,clean,seal,Strainer pulled due to high fines load,8
-2027-12-22,PU-208G,calibrate,impeller,Alignment check after suction header supports fixed,6
-2027-12-27,PU-204A,inspect,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),8
-2027-12-29,PU-211K,calibrate,coupling,Coupling hub fretting cleaned and anti-seize applied,12
+2027-12-25,PU-203C,inspect,seal,Cartridge seal faces dressed and leak-tested,1
+2027-12-25,PU-204A,clean,lubricant,Thermography noted 4 degC delta on DE bearing,2
+2027-12-25,PU-210J,inspect,general,Split bearing shells inspected for wipe marks,8
+2027-12-26,PU-208G,clean,impeller,Lube oil varnish potential measured (MPC=18),2
+2027-12-27,PU-212L,inspect,motor,Seal pot nitrogen header leak repaired,8
+2027-12-28,PU-207F,inspect,motor,Motor winding surge test performed post rewind,2
+2027-12-28,PU-211K,replace,alignment,Bearing pad thermocouples re-zeroed,0
 2027-12-31,PU-201A,inspect,impeller,Shaft alignment checked after turbine outage,8
-2027-12-31,PU-210J,inspect,general,Split bearing shells inspected for wipe marks,0
-2027-12-31,PU-212L,calibrate,suction strainer,Motor current signature analysis (no bar defects),1
+2027-12-31,PU-202B,replace,suction strainer,Suction basket flushed after filter DP alarm,6
+2027-12-31,PU-205D,replace,bearing,Bearing housing desiccant breather replaced,0
+2028-01-02,PU-209H,inspect,bearing,Impeller vane leading edge blended to remove pitting,4
+2028-01-07,PU-204A,clean,impeller,Impeller wear ring clearance checked with taper gauge,4
+2028-01-07,PU-212L,calibrate,seal,Strainer pulled due to high fines load,6
+2028-01-09,PU-211K,replace,coupling,Bearing pad thermocouples re-zeroed,0
+2028-01-14,PU-201A,repair,impeller,Lubricant sample sent to Chevron ASTM D4378 panel,6
+2028-01-15,PU-203C,replace,bearing,Coupling elastomer spider swapped due to cracks,0
+2028-01-15,PU-206E,inspect,coupling,Soft-foot eliminated after skid grout crack repair,6
+2028-01-18,PU-202B,inspect,bearing,"Motor IR scan performed, no hot spots",6
+2028-01-18,PU-207F,repair,seal,Motor winding surge test performed post rewind,8
+2028-01-19,PU-209H,inspect,seal,Impeller vane leading edge blended to remove pitting,2
+2028-01-20,PU-208G,calibrate,alignment,Impeller balancing weights verified after shop run,4
+2028-01-20,PU-211K,repair,alignment,Seal plan 53A bladder charged to 30 psig,0
+2028-01-20,PU-212L,inspect,suction strainer,Strainer pulled due to high fines load,6
+2028-01-21,PU-204A,clean,impeller,Oil mist console differential pressure adjusted,2
+2028-01-25,PU-210J,inspect,general,Skid drains cleared of condensate,0
+2028-01-28,PU-205D,replace,bearing,Lubrication checklist signed by Unit 300 operator,4
+2028-01-31,PU-201A,repair,lubricant,Shaft alignment checked after turbine outage,6
+2028-02-01,PU-212L,inspect,seal,Strainer pulled due to high fines load,12
+2028-02-03,PU-203C,inspect,coupling,Coupling elastomer spider swapped due to cracks,1
+2028-02-04,PU-209H,repair,impeller,Bearing housing vibration dropped below 3 mm/s,12
+2028-02-04,PU-211K,replace,coupling,Coupling hub fretting cleaned and anti-seize applied,0
+2028-02-05,PU-202B,calibrate,suction strainer,"Motor IR scan performed, no hot spots",4
+2028-02-06,PU-207F,repair,bearing,High-energy vibration at 1x RPM investigated,4
+2028-02-07,PU-204A,calibrate,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),6
+2028-02-12,PU-208G,inspect,impeller,Alignment check after suction header supports fixed,0
+2028-02-12,PU-212L,inspect,suction strainer,Motor current signature analysis (no bar defects),2
+2028-02-15,PU-206E,clean,alignment,Soft-foot eliminated after skid grout crack repair,2
+2028-02-15,PU-211K,calibrate,coupling,Bearing pad thermocouples re-zeroed,4
+2028-02-17,PU-201A,repair,impeller,Lubricant sample sent to Chevron ASTM D4378 panel,4
+2028-02-21,PU-204A,inspect,motor,Thermography noted 4 degC delta on DE bearing,4
+2028-02-23,PU-209H,replace,impeller,Impeller vane leading edge blended to remove pitting,8
+2028-02-24,PU-202B,inspect,motor,Bearing oil topped up with ISO 46 VG,12
+2028-02-24,PU-203C,repair,bearing,Thrust bearing temperature trending 3 degC high,12
+2028-02-24,PU-205D,replace,general,Bearing housing desiccant breather replaced,4
+2028-02-24,PU-212L,inspect,seal,Strainer pulled due to high fines load,1
+2028-02-27,PU-210J,inspect,lubricant,Operator completed lube round (ISO 22 synthetic),1
+2028-02-28,PU-211K,inspect,alignment,"API 610 route found axial vibration high, filter added",2
+2028-02-29,PU-207F,repair,motor,High-energy vibration at 1x RPM investigated,4
+2028-03-04,PU-201A,repair,alignment,Impeller clearance reset per OEM tolerance,6
+2028-03-08,PU-212L,clean,seal,Motor current signature analysis (no bar defects),2
+2028-03-09,PU-204A,inspect,lubricant,Thermography noted 4 degC delta on DE bearing,8
+2028-03-09,PU-208G,inspect,lubricant,Lube oil varnish potential measured (MPC=18),6
+2028-03-09,PU-211K,repair,bearing,"API 610 route found axial vibration high, filter added",12
+2028-03-13,PU-203C,replace,bearing,Coupling elastomer spider swapped due to cracks,12
+2028-03-15,PU-209H,replace,bearing,Impeller vane leading edge blended to remove pitting,8
+2028-03-18,PU-201A,inspect,impeller,Shaft alignment checked after turbine outage,0
+2028-03-19,PU-202B,inspect,motor,"Motor IR scan performed, no hot spots",8
+2028-03-19,PU-206E,calibrate,coupling,Strainer differential reset after catalyst fines flush,2
+2028-03-20,PU-205D,replace,seal,Bearing housing desiccant breather replaced,8
+2028-03-20,PU-211K,repair,seal,"API 610 route found axial vibration high, filter added",0
+2028-03-20,PU-212L,clean,suction strainer,Seal pot nitrogen header leak repaired,1
+2028-03-21,PU-207F,repair,seal,Motor winding surge test performed post rewind,8
+2028-03-27,PU-204A,clean,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),0
+2028-03-30,PU-208G,inspect,alignment,Impeller balancing weights verified after shop run,1
+2028-03-30,PU-211K,calibrate,bearing,"API 610 route found axial vibration high, filter added",0
+2028-03-31,PU-201A,inspect,impeller,Shaft alignment checked after turbine outage,0
+2028-04-01,PU-203C,repair,coupling,Coupling elastomer spider swapped due to cracks,4
+2028-04-02,PU-210J,clean,general,Operator completed lube round (ISO 22 synthetic),12
+2028-04-05,PU-212L,calibrate,suction strainer,Strainer pulled due to high fines load,0
+2028-04-06,PU-209H,replace,seal,Bearing housing vibration dropped below 3 mm/s,1
+2028-04-07,PU-202B,replace,bearing,Bearing oil topped up with ISO 46 VG,12
+2028-04-09,PU-207F,inspect,seal,Motor winding surge test performed post rewind,2
+2028-04-11,PU-201A,repair,seal,Shaft alignment checked after turbine outage,0
+2028-04-11,PU-204A,inspect,impeller,Impeller wear ring clearance checked with taper gauge,2
+2028-04-14,PU-211K,calibrate,alignment,Coupling hub fretting cleaned and anti-seize applied,8
+2028-04-16,PU-205D,replace,bearing,Plan 11 flush restriction orifice cleaned,0
+2028-04-18,PU-203C,inspect,bearing,Thrust bearing temperature trending 3 degC high,12
+2028-04-20,PU-212L,clean,motor,Strainer pulled due to high fines load,6
+2028-04-21,PU-206E,inspect,coupling,Strainer differential reset after catalyst fines flush,2
+2028-04-22,PU-201A,clean,seal,Shaft alignment checked after turbine outage,2
+2028-04-24,PU-209H,replace,seal,Seal support pot level corrected to 70%,2
+2028-04-24,PU-211K,replace,bearing,"API 610 route found axial vibration high, filter added",6
+2028-04-26,PU-207F,replace,seal,Seal flush conductivity matched condensate spec,0
+2028-04-26,PU-208G,calibrate,impeller,Impeller balancing weights verified after shop run,12
+2028-04-29,PU-202B,calibrate,suction strainer,"Motor IR scan performed, no hot spots",1
+2028-04-29,PU-204A,calibrate,impeller,Thermography noted 4 degC delta on DE bearing,6
+2028-05-02,PU-212L,inspect,suction strainer,Strainer pulled due to high fines load,8
+2028-05-05,PU-211K,repair,bearing,Coupling hub fretting cleaned and anti-seize applied,8
+2028-05-06,PU-210J,inspect,bearing,Skid drains cleared of condensate,1
+2028-05-08,PU-201A,clean,impeller,Shaft alignment checked after turbine outage,8
+2028-05-09,PU-203C,replace,seal,Cartridge seal faces dressed and leak-tested,2
+2028-05-10,PU-209H,inspect,bearing,Impeller vane leading edge blended to remove pitting,8
+2028-05-12,PU-205D,replace,general,Lubrication checklist signed by Unit 300 operator,0
+2028-05-16,PU-204A,clean,impeller,Oil mist console differential pressure adjusted,2
+2028-05-17,PU-207F,replace,bearing,Motor winding surge test performed post rewind,12
+2028-05-17,PU-212L,calibrate,suction strainer,Motor current signature analysis (no bar defects),12
+2028-05-19,PU-211K,inspect,seal,"API 610 route found axial vibration high, filter added",6
+2028-05-23,PU-201A,repair,lubricant,Shaft alignment checked after turbine outage,12
+2028-05-23,PU-202B,inspect,bearing,Suction basket flushed after filter DP alarm,0
+2028-05-23,PU-208G,calibrate,impeller,Lube oil varnish potential measured (MPC=18),1
+2028-05-24,PU-206E,clean,suction strainer,Strainer differential reset after catalyst fines flush,4
+2028-05-27,PU-203C,inspect,bearing,Thrust bearing temperature trending 3 degC high,1
+2028-05-29,PU-209H,inspect,bearing,Impeller vane leading edge blended to remove pitting,8
+2028-06-01,PU-211K,inspect,bearing,Bearing pad thermocouples re-zeroed,0
+2028-06-03,PU-204A,clean,impeller,Oil mist console differential pressure adjusted,2
+2028-06-03,PU-212L,inspect,motor,Motor current signature analysis (no bar defects),8
+2028-06-06,PU-201A,clean,impeller,Seal Plan 32 flow verified against refinery spec,0
+2028-06-06,PU-210J,inspect,bearing,Operator completed lube round (ISO 22 synthetic),1
+2028-06-09,PU-207F,inspect,seal,Motor winding surge test performed post rewind,1
+2028-06-11,PU-202B,replace,motor,Suction basket flushed after filter DP alarm,12
+2028-06-12,PU-205D,replace,bearing,Lubrication checklist signed by Unit 300 operator,0
+2028-06-13,PU-203C,repair,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),1
+2028-06-14,PU-209H,inspect,impeller,Impeller vane leading edge blended to remove pitting,1
+2028-06-15,PU-211K,calibrate,seal,Seal plan 53A bladder charged to 30 psig,8
+2028-06-17,PU-204A,inspect,lubricant,Impeller wear ring clearance checked with taper gauge,2
+2028-06-19,PU-208G,inspect,alignment,Impeller balancing weights verified after shop run,12
+2028-06-20,PU-212L,clean,seal,Strainer pulled due to high fines load,1
+2028-06-22,PU-201A,clean,alignment,Impeller clearance reset per OEM tolerance,4
+2028-06-24,PU-211K,replace,alignment,Seal plan 53A bladder charged to 30 psig,1
+2028-06-26,PU-206E,inspect,coupling,Strainer differential reset after catalyst fines flush,4
+2028-06-29,PU-203C,inspect,seal,Cartridge seal faces dressed and leak-tested,8
+2028-06-30,PU-204A,calibrate,lubricant,Impeller wear ring clearance checked with taper gauge,1
+2028-07-01,PU-207F,inspect,seal,Motor winding surge test performed post rewind,8
+2028-07-03,PU-209H,repair,seal,Seal support pot level corrected to 70%,1
+2028-07-04,PU-202B,replace,bearing,Bearing oil topped up with ISO 46 VG,1
+2028-07-06,PU-201A,repair,seal,Seal Plan 32 flow verified against refinery spec,0
+2028-07-07,PU-212L,clean,seal,Strainer pulled due to high fines load,8
+2028-07-08,PU-211K,inspect,seal,Coupling hub fretting cleaned and anti-seize applied,0
+2028-07-11,PU-210J,inspect,bearing,Operator completed lube round (ISO 22 synthetic),4
+2028-07-13,PU-205D,inspect,bearing,Lubrication checklist signed by Unit 300 operator,8
+2028-07-14,PU-204A,calibrate,impeller,Oil mist console differential pressure adjusted,8
+2028-07-14,PU-208G,inspect,alignment,Impeller balancing weights verified after shop run,1
+2028-07-15,PU-203C,inspect,seal,Coupling elastomer spider swapped due to cracks,2
+2028-07-18,PU-212L,calibrate,suction strainer,Strainer pulled due to high fines load,2
+2028-07-19,PU-211K,replace,coupling,Bearing pad thermocouples re-zeroed,8
+2028-07-20,PU-201A,repair,alignment,Seal Plan 32 flow verified against refinery spec,1
+2028-07-21,PU-209H,repair,impeller,Seal support pot level corrected to 70%,12
+2028-07-24,PU-207F,replace,seal,Seal flush conductivity matched condensate spec,12
+2028-07-25,PU-206E,calibrate,suction strainer,Strainer differential reset after catalyst fines flush,4
+2028-07-28,PU-202B,replace,bearing,Suction basket flushed after filter DP alarm,12
+2028-07-31,PU-204A,calibrate,lubricant,Oil mist console differential pressure adjusted,0
+2028-07-31,PU-211K,repair,coupling,"API 610 route found axial vibration high, filter added",8
+2028-08-01,PU-201A,inspect,lubricant,Shaft alignment checked after turbine outage,4
+2028-08-03,PU-203C,repair,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),1
+2028-08-03,PU-212L,calibrate,seal,Motor current signature analysis (no bar defects),12
+2028-08-08,PU-208G,clean,impeller,Impeller balancing weights verified after shop run,8
+2028-08-10,PU-205D,repair,seal,Lubrication checklist signed by Unit 300 operator,4
+2028-08-10,PU-209H,replace,bearing,Bearing housing vibration dropped below 3 mm/s,1
+2028-08-11,PU-207F,replace,motor,Seal flush conductivity matched condensate spec,8
+2028-08-12,PU-210J,clean,lubricant,Operator completed lube round (ISO 22 synthetic),8
+2028-08-13,PU-201A,clean,lubricant,Shaft alignment checked after turbine outage,12
+2028-08-15,PU-202B,calibrate,bearing,"Motor IR scan performed, no hot spots",12
+2028-08-15,PU-211K,calibrate,alignment,Seal plan 53A bladder charged to 30 psig,1
+2028-08-19,PU-204A,inspect,impeller,Impeller wear ring clearance checked with taper gauge,2
+2028-08-20,PU-212L,clean,seal,Seal pot nitrogen header leak repaired,4
+2028-08-24,PU-201A,clean,seal,Seal Plan 32 flow verified against refinery spec,8
+2028-08-24,PU-203C,repair,seal,Laser alignment with Fixturlaser XA (within 0.05 mm),12
+2028-08-24,PU-206E,calibrate,alignment,Strainer differential reset after catalyst fines flush,1
+2028-08-24,PU-211K,repair,alignment,Seal plan 53A bladder charged to 30 psig,2
+2028-08-27,PU-209H,replace,bearing,Impeller vane leading edge blended to remove pitting,0
+2028-08-28,PU-207F,repair,bearing,High-energy vibration at 1x RPM investigated,6
+2028-08-31,PU-212L,clean,motor,Motor current signature analysis (no bar defects),4
+2028-09-02,PU-204A,clean,motor,Impeller wear ring clearance checked with taper gauge,2
+2028-09-04,PU-208G,inspect,impeller,Impeller balancing weights verified after shop run,2
+2028-09-05,PU-202B,calibrate,motor,"Motor IR scan performed, no hot spots",1
+2028-09-06,PU-211K,calibrate,bearing,Seal plan 53A bladder charged to 30 psig,0
+2028-09-08,PU-201A,inspect,seal,Shaft alignment checked after turbine outage,1
+2028-09-09,PU-205D,repair,seal,Bearing housing desiccant breather replaced,2
+2028-09-14,PU-203C,replace,seal,Coupling elastomer spider swapped due to cracks,0
+2028-09-14,PU-209H,repair,impeller,Seal support pot level corrected to 70%,4
+2028-09-14,PU-212L,calibrate,seal,Motor current signature analysis (no bar defects),2
+2028-09-15,PU-204A,inspect,lubricant,Oil mist console differential pressure adjusted,8
+2028-09-15,PU-210J,clean,lubricant,Split bearing shells inspected for wipe marks,1
+2028-09-16,PU-207F,replace,motor,High-energy vibration at 1x RPM investigated,2
+2028-09-21,PU-211K,repair,seal,Seal plan 53A bladder charged to 30 psig,12
+2028-09-22,PU-201A,clean,lubricant,Shaft alignment checked after turbine outage,12
+2028-09-23,PU-202B,replace,bearing,Suction basket flushed after filter DP alarm,2
+2028-09-24,PU-206E,calibrate,alignment,Spacer coupling bolts retorqued to 95 ft-lbf,0
+2028-09-29,PU-204A,calibrate,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),12
+2028-09-29,PU-212L,inspect,seal,Strainer pulled due to high fines load,2
+2028-10-01,PU-203C,repair,seal,Coupling elastomer spider swapped due to cracks,6
+2028-10-01,PU-208G,inspect,lubricant,Alignment check after suction header supports fixed,0
+2028-10-04,PU-209H,repair,seal,Seal support pot level corrected to 70%,1
+2028-10-05,PU-207F,replace,bearing,High-energy vibration at 1x RPM investigated,1
+2028-10-06,PU-201A,inspect,impeller,Impeller clearance reset per OEM tolerance,0
+2028-10-06,PU-211K,inspect,seal,Seal plan 53A bladder charged to 30 psig,0
+2028-10-07,PU-205D,repair,bearing,Lubrication checklist signed by Unit 300 operator,0
+2028-10-12,PU-204A,calibrate,impeller,Thermography noted 4 degC delta on DE bearing,4
+2028-10-13,PU-202B,inspect,motor,Bearing oil topped up with ISO 46 VG,8
+2028-10-15,PU-212L,calibrate,seal,Motor current signature analysis (no bar defects),12
+2028-10-17,PU-210J,inspect,general,Split bearing shells inspected for wipe marks,8
+2028-10-20,PU-201A,clean,lubricant,Lubricant sample sent to Chevron ASTM D4378 panel,4
+2028-10-21,PU-203C,replace,bearing,Cartridge seal faces dressed and leak-tested,4
+2028-10-21,PU-211K,replace,bearing,Bearing pad thermocouples re-zeroed,8
+2028-10-23,PU-206E,clean,coupling,Strainer differential reset after catalyst fines flush,12
+2028-10-23,PU-207F,replace,bearing,Seal flush conductivity matched condensate spec,6
+2028-10-23,PU-208G,clean,impeller,Impeller balancing weights verified after shop run,8
+2028-10-26,PU-209H,replace,bearing,Seal support pot level corrected to 70%,4
+2028-10-28,PU-204A,clean,motor,Motor insulation DAR ratio recorded 1.6 (acceptable),2
+2028-10-28,PU-212L,clean,suction strainer,Motor current signature analysis (no bar defects),2
+2028-11-02,PU-211K,calibrate,seal,Coupling hub fretting cleaned and anti-seize applied,4
+2028-11-04,PU-202B,calibrate,suction strainer,Bearing oil topped up with ISO 46 VG,0
+2028-11-05,PU-201A,repair,lubricant,Shaft alignment checked after turbine outage,1
+2028-11-06,PU-203C,repair,seal,Coupling elastomer spider swapped due to cracks,0
+2028-11-07,PU-205D,inspect,bearing,Bearing housing desiccant breather replaced,8
+2028-11-09,PU-212L,calibrate,motor,Seal pot nitrogen header leak repaired,4
+2028-11-11,PU-207F,inspect,bearing,Motor winding surge test performed post rewind,12
+2028-11-11,PU-209H,repair,impeller,Impeller vane leading edge blended to remove pitting,6
+2028-11-16,PU-204A,clean,motor,Motor insulation DAR ratio recorded 1.6 (acceptable),4
+2028-11-16,PU-208G,calibrate,impeller,Lube oil varnish potential measured (MPC=18),0
+2028-11-16,PU-211K,calibrate,seal,Seal plan 53A bladder charged to 30 psig,12
+2028-11-17,PU-210J,clean,lubricant,Skid drains cleared of condensate,2
+2028-11-18,PU-201A,inspect,seal,Seal Plan 32 flow verified against refinery spec,8
+2028-11-21,PU-212L,inspect,motor,Motor current signature analysis (no bar defects),2
+2028-11-22,PU-202B,calibrate,bearing,Bearing oil topped up with ISO 46 VG,0
+2028-11-22,PU-206E,calibrate,suction strainer,Strainer differential reset after catalyst fines flush,1
+2028-11-24,PU-203C,repair,bearing,Coupling elastomer spider swapped due to cracks,8
+2028-11-25,PU-211K,calibrate,alignment,Bearing pad thermocouples re-zeroed,6
+2028-11-30,PU-207F,replace,bearing,High-energy vibration at 1x RPM investigated,4
+2028-11-30,PU-209H,replace,impeller,Seal support pot level corrected to 70%,0
+2028-12-01,PU-201A,inspect,seal,Impeller clearance reset per OEM tolerance,6
+2028-12-02,PU-204A,inspect,lubricant,Motor insulation DAR ratio recorded 1.6 (acceptable),1
+2028-12-05,PU-205D,repair,general,Bearing housing desiccant breather replaced,12
+2028-12-05,PU-212L,clean,seal,Motor current signature analysis (no bar defects),12
+2028-12-10,PU-202B,replace,motor,Bearing oil topped up with ISO 46 VG,8
+2028-12-10,PU-203C,repair,coupling,Laser alignment with Fixturlaser XA (within 0.05 mm),4
+2028-12-10,PU-208G,clean,alignment,Lube oil varnish potential measured (MPC=18),6
+2028-12-10,PU-211K,repair,seal,Seal plan 53A bladder charged to 30 psig,0
+2028-12-16,PU-204A,calibrate,impeller,Motor insulation DAR ratio recorded 1.6 (acceptable),1
+2028-12-17,PU-207F,inspect,motor,Seal flush conductivity matched condensate spec,8
+2028-12-17,PU-209H,repair,impeller,Bearing housing vibration dropped below 3 mm/s,0
+2028-12-17,PU-212L,calibrate,suction strainer,Strainer pulled due to high fines load,2
+2028-12-18,PU-201A,repair,impeller,Seal Plan 32 flow verified against refinery spec,6
+2028-12-19,PU-211K,replace,seal,Seal plan 53A bladder charged to 30 psig,4
+2028-12-20,PU-210J,inspect,general,Split bearing shells inspected for wipe marks,4
+2028-12-22,PU-206E,inspect,alignment,Strainer differential reset after catalyst fines flush,6
+2028-12-29,PU-201A,inspect,seal,Seal Plan 32 flow verified against refinery spec,8
+2028-12-29,PU-203C,replace,bearing,Laser alignment with Fixturlaser XA (within 0.05 mm),0
+2028-12-29,PU-204A,calibrate,impeller,Impeller wear ring clearance checked with taper gauge,12
+2028-12-29,PU-212L,inspect,seal,Strainer pulled due to high fines load,4
+2028-12-31,PU-208G,clean,lubricant,Impeller balancing weights verified after shop run,6

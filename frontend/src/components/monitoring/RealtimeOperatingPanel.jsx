@@ -41,7 +41,7 @@ const RealtimeOperatingPanel = ({ pumpId }) => {
     };
 
     loadData();
-    const interval = setInterval(loadData, 5000); // Update every 5 seconds
+    const interval = setInterval(loadData, 1500); // Update every 1.5 seconds for fast live reading
     return () => clearInterval(interval);
   }, [pumpId]);
 
@@ -108,13 +108,17 @@ const RealtimeOperatingPanel = ({ pumpId }) => {
           <p className="text-xs text-slate-400">bar</p>
         </div>
 
-        {/* RPM */}
-        <div className="bg-slate-700/50 rounded-lg p-4">
-          <div className="flex items-center mb-2">
-            <Zap className="w-4 h-4 text-yellow-400 mr-2" />
+        {/* RPM - Prominent Speed Display */}
+        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/40 rounded-lg p-4 col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center">
+              <Zap className="w-5 h-5 text-yellow-400 mr-2 animate-pulse" />
+              <span className="text-sm font-semibold text-yellow-400 uppercase tracking-wide">Pump Speed</span>
+            </div>
             <span className="text-xs text-slate-400">RPM</span>
           </div>
-          <p className="text-2xl font-bold text-white">{realtimeData.data.rpm?.toFixed(0) || '1450'}</p>
+          <p className="text-4xl font-bold text-yellow-300 mb-1">{realtimeData.data.rpm?.toFixed(0) || '1450'}</p>
+          <p className="text-xs text-slate-400">Running Speed - Live Reading</p>
         </div>
 
         {/* Motor Current */}

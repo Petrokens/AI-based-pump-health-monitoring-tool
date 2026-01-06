@@ -64,7 +64,7 @@ const Settings = () => {
     // API Settings
     api: {
       baseUrl: 'https://ai-based-pump-health-monitoring-tool.onrender.com/api',
-      timeout: 10000,
+      timeout: 20000, // Increased for fast polling
       retryAttempts: 3,
     }
   });

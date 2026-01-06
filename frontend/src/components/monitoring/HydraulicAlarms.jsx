@@ -19,7 +19,7 @@ const HydraulicAlarms = ({ pumpId }) => {
     };
 
     loadData();
-    const interval = setInterval(loadData, 30000);
+    const interval = setInterval(loadData, 2000); // Update every 2 seconds for fast live reading
     return () => clearInterval(interval);
   }, [pumpId]);
 

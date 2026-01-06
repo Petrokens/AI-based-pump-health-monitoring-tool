@@ -1,13 +1,13 @@
-pump_id,model,rated_flow_m3h,rated_head_m,rated_power_kw,impeller_dia_mm,vendor,head_curve_flow,head_curve_head,eff_curve_flow,eff_curve_eff,fluid_density
-PU-201A,Flowserve Mark 3 (3x4-10),190,53,55,254,Flowserve,"[0, 76.0, 142.5, 190]","[64.7, 55.7, 43.5, 30.7]","[38.0, 95.0, 161.5, 190]","[29, 55, 68, 66]",998
-PU-202B,Sulzer AHLSTAR A43-125,160,48,45,305,Sulzer,"[0, 64.0, 120.0, 160]","[58.6, 50.4, 39.4, 27.8]","[32.0, 80.0, 136.0, 160]","[25, 56, 70, 63]",998
-PU-203C,KSB MegaCPK 150-400,260,67,90,360,KSB,"[0, 104.0, 195.0, 260]","[81.7, 70.4, 54.9, 38.9]","[52.0, 130.0, 221.0, 260]","[29, 60, 69, 68]",1000
-PU-204A,Goulds 3196 (3x4-13),220,60,75,356,ITT Goulds,"[0, 88.0, 165.0, 220]","[73.2, 63.0, 49.2, 34.8]","[44.0, 110.0, 187.0, 220]","[24, 55, 69, 65]",998
-PU-205D,Grundfos NB 80-200/216,170,45,55,270,Grundfos,"[0, 68.0, 127.5, 170]","[54.9, 47.2, 36.9, 26.1]","[34.0, 85.0, 144.5, 170]","[25, 59, 68, 65]",998
-PU-206E,Ruhrpumpen CPP 100-250,140,42,48,285,Ruhrpumpen,"[0, 56.0, 105.0, 140]","[51.2, 44.1, 34.4, 24.4]","[28.0, 70.0, 119.0, 140]","[29, 60, 74, 65]",1000
-PU-207F,Ebara GSD 200-300,300,78,110,400,Ebara,"[0, 120.0, 225.0, 300]","[95.2, 81.9, 64.0, 45.2]","[60.0, 150.0, 255.0, 300]","[27, 59, 72, 62]",1005
-PU-208G,Andritz ACP 150-350,240,65,95,375,Andritz,"[0, 96.0, 180.0, 240]","[79.3, 68.2, 53.3, 37.7]","[48.0, 120.0, 204.0, 240]","[30, 61, 70, 68]",1000
-PU-209H,Warman SHW 150,180,55,88,365,Weir Minerals,"[0, 72.0, 135.0, 180]","[67.1, 57.8, 45.1, 31.9]","[36.0, 90.0, 153.0, 180]","[26, 57, 70, 65]",1030
-PU-210J,Wilo CronoLine-IL 65/175,120,32,32,230,Wilo,"[0, 48.0, 90.0, 120]","[39.0, 33.6, 26.2, 18.6]","[24.0, 60.0, 102.0, 120]","[30, 57, 69, 63]",998
-PU-211K,KSB Etanorm SYT 125-250,210,58,78,340,KSB,"[0, 84.0, 157.5, 210]","[70.8, 60.9, 47.6, 33.6]","[42.0, 105.0, 178.5, 210]","[27, 55, 73, 67]",980
-PU-212L,Sulzer SNS 200-500,320,86,125,415,Sulzer,"[0, 128.0, 240.0, 320]","[104.9, 90.3, 70.5, 49.9]","[64.0, 160.0, 272.0, 320]","[28, 57, 68, 69]",1002
+pump_id,pump_type,pump_type_detail,manufacturer,model,installation_date,rated_power_kw,rated_flow_m3h,rated_head_m,flow_range_min_m3h,flow_range_max_m3h,head_range_min_m,head_range_max_m,rated_rpm,seal_type,bearing_type_de,bearing_type_nde,impeller_type,location,criticality_level,serial_number,warranty_expiry,last_overhaul,min_safe_flow_m3h,max_safe_flow_m3h,max_motor_load_kw,max_suction_pressure_bar,efficiency_bep_percent,npshr_m,health_score
+PU-201A,Centrifugal,BB,Generic,PU201-Series,2022-05-10,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_2,High,PU220510A,2027-05-10,2024-05-10,60.0,210.0,24.0,3.5,84.0,3.8,82
+PU-202B,Centrifugal,BB,Generic,PU201-Series,2022-06-15,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_2,High,PU220615B,2027-06-15,2024-06-15,60.0,210.0,24.0,3.5,84.0,3.8,58
+PU-203C,Centrifugal,BB,Generic,PU201-Series,2022-07-20,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_3,High,PU220720C,2027-07-20,2024-07-20,60.0,210.0,24.0,3.5,84.0,3.8,90
+PU-204A,Centrifugal,BB,Generic,PU201-Series,2022-08-10,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_3,High,PU220810A,2027-08-10,2024-08-10,60.0,210.0,24.0,3.5,84.0,3.8,65
+PU-205D,Centrifugal,BB,Generic,PU201-Series,2022-09-05,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_4,High,PU220905D,2027-09-05,2024-09-05,60.0,210.0,24.0,3.5,84.0,3.8,72
+PU-206E,Centrifugal,BB,Generic,PU201-Series,2022-10-12,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_4,High,PU221012E,2027-10-12,2024-10-12,60.0,210.0,24.0,3.5,84.0,3.8,60
+PU-207F,Centrifugal,BB,Generic,PU201-Series,2022-11-18,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_5,High,PU221118F,2027-11-18,2024-11-18,60.0,210.0,24.0,3.5,84.0,3.8,88
+PU-208G,Centrifugal,BB,Generic,PU201-Series,2022-12-22,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_5,High,PU221222G,2027-12-22,2024-12-22,60.0,210.0,24.0,3.5,84.0,3.8,75
+PU-209H,Centrifugal,BB,Generic,PU201-Series,2023-01-30,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_6,High,PU230130H,2028-01-30,2025-01-30,60.0,210.0,24.0,3.5,84.0,3.8,69
+PU-210J,Centrifugal,BB,Generic,PU201-Series,2023-02-25,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_6,High,PU230225J,2028-02-25,2025-02-25,60.0,210.0,24.0,3.5,84.0,3.8,62
+PU-211K,Centrifugal,BB,Generic,PU201-Series,2023-03-18,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_7,High,PU230318K,2028-03-18,2025-03-18,60.0,210.0,24.0,3.5,84.0,3.8,80
+PU-212L,Centrifugal,BB,Generic,PU201-Series,2023-04-22,22.0,190.0,65.0,70.0,240.0,35.0,85.0,1450,Single_Mechanical,Roller,Roller,Closed,Process_Unit_7,High,PU230422L,2028-04-22,2025-04-22,60.0,210.0,24.0,3.5,84.0,3.8,85

@@ -20,6 +20,15 @@ warnings.filterwarnings('ignore')
 app = Flask(__name__)
 CORS(app)
 
+# Lightweight cache for expensive endpoints
+PUMP_LIST_CACHE = {
+    "data": None,
+    "timestamp": datetime.min
+}
+PUMP_CACHE_LOCK = threading.Lock()
+PUMP_CACHE_TTL_SECONDS = 60  # serve cached pump list for up to 1 minute
+PUMP_LIST_MAX_SECONDS = 5    # safety cap per request to avoid timeouts
+
 # Helper function to convert numpy types to native Python types for JSON serialization
 def convert_to_python_type(value):
     """Convert numpy/pandas types to native Python types"""
@@ -44,13 +53,63 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 
 # Load CSV files with optimizations
+PUMP_MASTER_PATH = os.path.join(DATA_DIR, 'pump_master.csv')
+PUMP_MASTER_LOCK = threading.Lock()
+PUMP_MASTER_MTIME = None
+
+def _load_pump_master() -> pd.DataFrame:
+    df = pd.read_csv(PUMP_MASTER_PATH)
+    df.columns = df.columns.str.strip()
+    return df
+
+def _refresh_pump_master_if_changed():
+    """Reload pump master when the CSV file is modified; refresh runtime state and cache."""
+    global pump_master_df, PUMP_MASTER_MTIME, runtime_state
+    try:
+        current_mtime = os.path.getmtime(PUMP_MASTER_PATH)
+    except OSError:
+        return False
+
+    # Fast path: unchanged
+    if PUMP_MASTER_MTIME is not None and current_mtime == PUMP_MASTER_MTIME:
+        return False
+
+    with PUMP_MASTER_LOCK:
+        # Re-check inside the lock
+        try:
+            current_mtime = os.path.getmtime(PUMP_MASTER_PATH)
+        except OSError:
+            return False
+        if PUMP_MASTER_MTIME is not None and current_mtime == PUMP_MASTER_MTIME:
+            return False
+
+        # Reload master data
+        df = _load_pump_master()
+        PUMP_MASTER_MTIME = current_mtime
+        pump_master_df = df
+
+        # Rebuild runtime state entries for any new pumps
+        with runtime_state_lock:
+            runtime_state = _read_runtime_state_file() or {}
+            for pump_id_value in pump_master_df["pump_id"].values:
+                _ensure_runtime_entry(str(pump_id_value))
+            _write_runtime_state_file({k: dict(v) for k, v in runtime_state.items()})
+
+        # Invalidate pump list cache
+        with PUMP_CACHE_LOCK:
+            PUMP_LIST_CACHE["data"] = None
+            PUMP_LIST_CACHE["timestamp"] = datetime.min
+
+        print("🔄 Reloaded pump_master.csv; pumps:", list(pump_master_df['pump_id'].values))
+        return True
+
 try:
     print("📂 Loading CSV data files...")
-    
+
     # Load pump master (small file, load all)
-    pump_master_df = pd.read_csv(os.path.join(DATA_DIR, 'pump_master.csv'))
-    pump_master_df.columns = pump_master_df.columns.str.strip()
-    
+    pump_master_df = _load_pump_master()
+    PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
+
     # Load operation log with optimizations - use dtype to reduce memory and speed
     print("  Loading operation logs (this may take a moment for large files)...")
     operation_log_df = pd.read_csv(
@@ -140,6 +199,16 @@ def _ensure_runtime_entry(pump_id: str):
         runtime_state[pump_id] = _default_runtime_state()
 
 
+# Auto-reload hook for every request to keep pump master in sync without restarts
+@app.before_request
+def _maybe_reload_pump_master():
+    try:
+        _refresh_pump_master_if_changed()
+    except Exception as exc:
+        # Non-fatal: log and continue with existing in-memory data
+        print(f"⚠ Pump master reload skipped: {exc}")
+
+
 for pump_id_value in pump_master_df["pump_id"].values:
     _ensure_runtime_entry(str(pump_id_value))
 
@@ -149,6 +218,16 @@ _write_runtime_state_file({k: dict(v) for k, v in runtime_state.items()})
 def _parse_iso(ts: str):
     try:
         return datetime.fromisoformat(ts)
+    except Exception:
+        return None
+
+
+def _parse_at_param(at_value: str):
+    """Parse an ISO timestamp string for 'at' query params."""
+    if not at_value:
+        return None
+    try:
+        return pd.to_datetime(at_value).to_pydatetime()
     except Exception:
         return None
 
@@ -318,6 +397,10 @@ class FeatureEngineer:
 class PredictiveMaintenanceAI:
     """Real AI/ML models for predictive maintenance"""
     
+    # RUL bounds (hours)
+    MIN_RUL_HOURS = 2160   # ~3 months
+    MAX_RUL_HOURS = 17520  # ~24 months
+
     def __init__(self):
         self.anomaly_detectors = {}
         self.scalers = {}
@@ -409,9 +492,11 @@ class PredictiveMaintenanceAI:
         # Calculate derived features
         head_m = (sensor_data['discharge_pressure_bar'] - sensor_data['suction_pressure_bar']) * 10.2
         hydraulic_power = (sensor_data['flow_m3h'] * head_m) / 367
-        efficiency = (hydraulic_power / sensor_data['motor_power_kw']) * 100
+        motor_power = sensor_data['motor_power_kw']
+        motor_power_safe = motor_power if motor_power != 0 else 0.1  # prevent zero-division
+        efficiency = (hydraulic_power / motor_power_safe) * 100
         pressure_ratio = sensor_data['discharge_pressure_bar'] / (sensor_data['suction_pressure_bar'] + 0.1)
-        specific_energy = sensor_data['motor_power_kw'] / (sensor_data['flow_m3h'] + 0.1)
+        specific_energy = motor_power_safe / (sensor_data['flow_m3h'] + 0.1)
         
         # Prepare feature vector
         features = np.array([[
@@ -453,18 +538,23 @@ class PredictiveMaintenanceAI:
         health_score = 100.0
         
         # Factor 1: Flow deviation (weight: 20%)
-        flow_deviation = abs(sensor_data['flow_m3h'] - baseline['flow_mean']) / baseline['flow_mean']
+        flow_mean_safe = baseline['flow_mean'] if baseline['flow_mean'] != 0 else 0.1
+        flow_deviation = abs(sensor_data['flow_m3h'] - flow_mean_safe) / flow_mean_safe
         health_score -= min(flow_deviation * 100, 20)
         
         # Factor 2: Efficiency loss (weight: 25%)
         head_m = (sensor_data['discharge_pressure_bar'] - sensor_data['suction_pressure_bar']) * 10.2
         hydraulic_power = (sensor_data['flow_m3h'] * head_m) / 367
-        current_efficiency = (hydraulic_power / sensor_data['motor_power_kw']) * 100
-        efficiency_loss = max(0, baseline['efficiency_mean'] - current_efficiency) / baseline['efficiency_mean']
+        motor_power = sensor_data['motor_power_kw']
+        motor_power_safe = motor_power if motor_power != 0 else 0.1
+        current_efficiency = (hydraulic_power / motor_power_safe) * 100
+        efficiency_mean_safe = baseline['efficiency_mean'] if baseline['efficiency_mean'] != 0 else 0.1
+        efficiency_loss = max(0, efficiency_mean_safe - current_efficiency) / efficiency_mean_safe
         health_score -= min(efficiency_loss * 100, 25)
         
         # Factor 3: Power consumption increase (weight: 20%)
-        power_increase = max(0, sensor_data['motor_power_kw'] - baseline['power_mean']) / baseline['power_mean']
+        power_mean_safe = baseline['power_mean'] if baseline['power_mean'] != 0 else 0.1
+        power_increase = max(0, sensor_data['motor_power_kw'] - power_mean_safe) / power_mean_safe
         health_score -= min(power_increase * 100, 20)
         
         # Factor 4: Anomaly score (weight: 35%)
@@ -522,6 +612,11 @@ class PredictiveMaintenanceAI:
             return max(24, min(2000, adjusted_rul))
         
         return 500
+
+    @staticmethod
+    def clamp_rul_hours(rul_hours: int) -> int:
+        """Clamp RUL hours to configured min/max to avoid unrealistically low/high values."""
+        return int(max(PredictiveMaintenanceAI.MIN_RUL_HOURS, min(PredictiveMaintenanceAI.MAX_RUL_HOURS, rul_hours)))
     
     def detect_failure_modes(self, pump_id: str, sensor_data: Dict, health_index: float) -> List[Dict]:
         """Detect specific failure modes based on sensor patterns"""
@@ -618,38 +713,58 @@ class RealDataProvider:
     """Provides real data from CSV files"""
     
     @staticmethod
-    def get_latest_reading(pump_id: str) -> Dict:
-        """Get most recent sensor reading for a pump (optimized)"""
-        # Since data is already sorted, get last row for this pump (faster than sorting again)
+    def get_latest_reading(pump_id: str, at: datetime = None) -> Dict:
+        """Get sensor reading for a pump. If `at` provided, returns the closest reading at or before that time."""
         pump_mask = operation_log_df['pump_id'] == pump_id
         pump_ops = operation_log_df[pump_mask]
         
         if pump_ops.empty:
             raise ValueError(f"No data found for pump {pump_id}")
+
+        selected = None
+        if at is not None:
+            # Choose the latest reading at or before the requested time; otherwise the earliest after it
+            pump_ops_at = pump_ops[pump_ops['timestamp'] <= at]
+            if not pump_ops_at.empty:
+                selected = pump_ops_at.iloc[-1]
+            else:
+                pump_ops_future = pump_ops[pump_ops['timestamp'] > at]
+                if not pump_ops_future.empty:
+                    selected = pump_ops_future.iloc[0]
+        if selected is None:
+            selected = pump_ops.iloc[-1]
         
-        # Get last row (most recent since data is sorted)
-        latest = pump_ops.iloc[-1]
-        
-        # Convert all values to native Python types
         return {
-            'timestamp': latest['timestamp'].isoformat(),
-            'flow_m3h': float(convert_to_python_type(latest['flow_m3h'])),
-            'discharge_pressure_bar': float(convert_to_python_type(latest['discharge_pressure_bar'])),
-            'suction_pressure_bar': float(convert_to_python_type(latest['suction_pressure_bar'])),
-            'motor_power_kw': float(convert_to_python_type(latest['motor_power_kw'])),
-            'rpm': float(convert_to_python_type(latest['rpm'])) if 'rpm' in latest and pd.notna(latest['rpm']) else 1450.0,
-            'status': str(latest['status'])
+            'timestamp': selected['timestamp'].isoformat(),
+            'flow_m3h': float(convert_to_python_type(selected['flow_m3h'])),
+            'discharge_pressure_bar': float(convert_to_python_type(selected['discharge_pressure_bar'])),
+            'suction_pressure_bar': float(convert_to_python_type(selected['suction_pressure_bar'])),
+            'motor_power_kw': float(convert_to_python_type(selected['motor_power_kw'])),
+            'rpm': float(convert_to_python_type(selected['rpm'])) if 'rpm' in selected and pd.notna(selected['rpm']) else 1450.0,
+            'status': str(selected['status'])
         }
     
     @staticmethod
     def get_historical_data(pump_id: str, hours: int = 24) -> List[Dict]:
-        """Get historical sensor readings (optimized with vectorized operations)"""
+        """Get historical sensor readings (optimized with vectorized operations) - supports up to 6 months"""
         # Filter by pump - data already sorted by timestamp
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
         
-        # Limit to recent data for performance
-        if len(pump_ops) > 5000:
-            pump_ops = pump_ops.tail(5000)
+        # Support up to 6 months (4320 hours) - filter by time window for performance
+        if hours > 24:
+            # For longer periods, sample data to keep response fast
+            cutoff_time = pump_ops['timestamp'].max() - pd.Timedelta(hours=hours)
+            pump_ops = pump_ops[pump_ops['timestamp'] >= cutoff_time]
+            
+            # Sample data for very long periods (6 months = ~4320 hours)
+            if hours > 720:  # More than 30 days
+                # Sample every Nth row to keep data manageable
+                sample_rate = max(1, len(pump_ops) // 10000)  # Max 10k points
+                pump_ops = pump_ops.iloc[::sample_rate]
+        else:
+            # For short periods (24h), use recent data
+            if len(pump_ops) > 5000:
+                pump_ops = pump_ops.tail(5000)
         
         # Add derived features
         pump_ops = FeatureEngineer.calculate_derived_features(pump_ops)
@@ -672,8 +787,38 @@ class RealDataProvider:
                 pump_ops['motor_power_kw']
             )
         ]
-        
+
         return result
+
+    @staticmethod
+    def get_fast_forward_series(pump_id: str, window_hours: int = 6) -> List[Dict]:
+        """Return a dense time-series window for fast-forward visualization."""
+        pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
+
+        if pump_ops.empty:
+            raise ValueError(f"No operation data for pump {pump_id}")
+
+        latest_ts = pump_ops['timestamp'].max()
+        cutoff = latest_ts - timedelta(hours=window_hours)
+        window = pump_ops[pump_ops['timestamp'] >= cutoff].copy()
+
+        # Ensure we have data (fallback to last 24 rows)
+        if window.empty:
+            window = pump_ops.tail(24).copy()
+
+        window = FeatureEngineer.calculate_derived_features(window)
+        series = []
+        for _, row in window.iterrows():
+            series.append({
+                "timestamp": row['timestamp'].isoformat(),
+                "flow": float(convert_to_python_type(row.get('flow_m3h', 0))),
+                "discharge_pressure": float(convert_to_python_type(row.get('discharge_pressure_bar', 0))),
+                "suction_pressure": float(convert_to_python_type(row.get('suction_pressure_bar', 0))),
+                "rpm": float(convert_to_python_type(row.get('rpm', 0))),
+                "motor_power": float(convert_to_python_type(row.get('motor_power_kw', 0))),
+                "status": str(row.get('status', 'running')),
+            })
+        return series
 
 # ==================== API Endpoints ====================
 
@@ -692,24 +837,44 @@ def health_check():
 @app.route('/api/pumps', methods=['GET'])
 def get_pumps():
     """Get list of all pumps with real-time analysis"""
+    now = datetime.now()
+    start_time = now
+
+    # Serve from cache if fresh to avoid repeated heavy computation
+    with PUMP_CACHE_LOCK:
+        cache_age = (now - PUMP_LIST_CACHE["timestamp"]).total_seconds()
+        if PUMP_LIST_CACHE["data"] is not None and cache_age < PUMP_CACHE_TTL_SECONDS:
+            return jsonify(PUMP_LIST_CACHE["data"])
+
     pump_list = []
     
     for _, pump_row in pump_master_df.iterrows():
+        # Abort early if the request is running too long to avoid frontend timeouts
+        if (datetime.now() - start_time).total_seconds() > PUMP_LIST_MAX_SECONDS:
+            break
+
         pump_id = pump_row['pump_id']
         
         try:
+            # Skip pumps that have no operation data
+            if pump_id not in operation_log_df['pump_id'].values:
+                continue
+
             # Get latest real data
             latest_data = RealDataProvider.get_latest_reading(pump_id)
             
             # Run AI analysis
             anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
             health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
+            # Use master health score if provided to smooth display/status
+            master_health = convert_to_python_type(pump_row.get('health_score'))
+            display_health = float(master_health) if master_health is not None else health_index
             rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
             
             # Determine status
-            if health_index > 80:
+            if display_health > 80:
                 status = "normal"
-            elif health_index > 60:
+            elif display_health > 60:
                 status = "warning"
             else:
                 status = "critical"
@@ -722,7 +887,7 @@ def get_pumps():
                 "id": str(pump_id),  # Ensure string
                 "name": f"{pump_row.get('model', 'Unknown')} - {pump_id}",
                 "status": str(status),
-                "health_index": float(round(convert_to_python_type(health_index) or 85.0, 1)),
+                "health_index": float(round(convert_to_python_type(display_health) or 85.0, 1)),
                 "rul_hours": int(convert_to_python_type(rul) or 500),
                 "location": "Pump House - Unit 1",
                 "model": str(pump_row.get('model', 'Unknown')),
@@ -736,6 +901,11 @@ def get_pumps():
             print(traceback.format_exc())
             continue
     
+    # Update cache
+    with PUMP_CACHE_LOCK:
+        PUMP_LIST_CACHE["data"] = pump_list
+        PUMP_LIST_CACHE["timestamp"] = datetime.now()
+
     return jsonify(pump_list)
 
 
@@ -800,12 +970,21 @@ def get_realtime_data(pump_id):
 def get_pump_kpis(pump_id):
     """Get KPI metrics with AI analysis"""
     try:
+        # Master data lookup (required for display health override)
+        pump_row = pump_master_df[pump_master_df['pump_id'] == pump_id]
+        if pump_row.empty:
+            return jsonify({"error": "Pump not found"}), 404
+        pump_info = pump_row.iloc[0]
+
         latest_data = RealDataProvider.get_latest_reading(pump_id)
         
         # AI predictions
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
-        rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        master_health = convert_to_python_type(pump_info.get("health_score"))
+        display_health = float(master_health) if master_health is not None else health_index
+        raw_rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul = ai_predictor.clamp_rul_hours(raw_rul)
         
         # Calculate metrics
         baseline = ai_predictor.baseline_stats.get(pump_id, {})
@@ -874,6 +1053,8 @@ def get_pump_kpis(pump_id):
         return jsonify({
             "pump_id": str(pump_id),
             "rul_hours": int(rul),
+            "rul_days": int(rul / 24),
+            "rul_months": float(round(rul / 720, 1)),
             "health_index": float(round(health_index, 1)),
             "efficiency_deviation": float(round(efficiency_deviation, 2)),
             "motor_health": float(round(motor_health, 1)),
@@ -892,13 +1073,153 @@ def get_pump_kpis(pump_id):
 
 @app.route('/api/pump/<pump_id>/trends', methods=['GET'])
 def get_pump_trends(pump_id):
-    """Get historical trend data from CSV"""
+    """Get historical trend data from CSV - supports up to 6 months (4320 hours)"""
     try:
         hours = int(request.args.get('hours', 24))
+        # Cap at 6 months for performance
+        hours = min(hours, 4320)
         trends = RealDataProvider.get_historical_data(pump_id, hours)
         return jsonify(trends)
     except Exception as e:
         return jsonify({"error": str(e)}), 404
+
+
+@app.route('/api/pump/<pump_id>/fast-forward', methods=['GET'])
+def get_fast_forward(pump_id):
+    """Provide dense time-series data for fast-forward playback."""
+    try:
+        speed = float(request.args.get('speed', 100))
+        window_hours = int(request.args.get('window_hours', 6))
+        window_hours = max(1, min(window_hours, 24))
+
+        series = RealDataProvider.get_fast_forward_series(pump_id, window_hours)
+        if not series:
+            return jsonify({"error": "No data for requested window"}), 404
+
+        total_real_seconds = window_hours * 3600
+        playback_seconds = total_real_seconds / max(speed, 1)
+
+        return jsonify({
+            "pump_id": pump_id,
+            "speed": speed,
+            "window_hours": window_hours,
+            "playback_duration_seconds": playback_seconds,
+            "total_points": len(series),
+            "series": series
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 404
+
+@app.route('/api/pump/<pump_id>/demo-simulation', methods=['GET'])
+def get_demo_simulation(pump_id):
+    """
+    Demo simulation endpoint: Plays 6 months of data in 5 minutes.
+    Returns sampled data points optimized for smooth 5-minute playback.
+    """
+    try:
+        pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
+        
+        if pump_ops.empty:
+            return jsonify({"error": f"No operation data for pump {pump_id}"}), 404
+        
+        # Get 6 months of data (4320 hours)
+        # Find the time range in the data
+        min_timestamp = pump_ops['timestamp'].min()
+        max_timestamp = pump_ops['timestamp'].max()
+        data_span = (max_timestamp - min_timestamp).total_seconds() / 3600  # hours
+        
+        # Use last 6 months of data, or all data if less than 6 months
+        target_hours = min(4320, data_span)
+        cutoff_timestamp = max_timestamp - pd.Timedelta(hours=target_hours)
+        demo_data = pump_ops[pump_ops['timestamp'] >= cutoff_timestamp].copy()
+        
+        if demo_data.empty:
+            demo_data = pump_ops.copy()
+        
+        # Sort by timestamp
+        demo_data = demo_data.sort_values('timestamp').reset_index(drop=True)
+        
+        # Sample data for smooth 5-minute playback
+        # Target: ~600-1000 points for smooth playback (updates every 0.3-0.5 seconds)
+        TARGET_POINTS = 600
+        total_points = len(demo_data)
+        
+        if total_points > TARGET_POINTS:
+            # Sample evenly spaced points
+            sample_indices = np.linspace(0, total_points - 1, TARGET_POINTS, dtype=int)
+            demo_data = demo_data.iloc[sample_indices].reset_index(drop=True)
+        elif total_points < 100:
+            # If too few points, interpolate by repeating (for demo purposes)
+            # This shouldn't happen with 6 months of 15-min interval data
+            pass
+        
+        # Calculate derived features
+        demo_data = FeatureEngineer.calculate_derived_features(demo_data)
+        
+        # Prepare series with all sensor data
+        series = []
+        start_real_time = demo_data.iloc[0]['timestamp']
+        
+        for idx, row in demo_data.iterrows():
+            # Calculate progress percentage through 6 months
+            time_diff = (row['timestamp'] - start_real_time).total_seconds()
+            total_time_seconds = (demo_data.iloc[-1]['timestamp'] - start_real_time).total_seconds()
+            progress = time_diff / total_time_seconds if total_time_seconds > 0 else 0
+            
+            # Simulated timestamp for 5-minute window (0 to 300 seconds)
+            simulated_time_seconds = progress * 300  # Map to 5 minutes (300 seconds)
+            simulated_timestamp = datetime.now() + timedelta(seconds=simulated_time_seconds)
+            
+            # Helper function to safely convert to float with fallback
+            def safe_float(value, default=0.0):
+                if value is None or pd.isna(value):
+                    return default
+                try:
+                    converted = convert_to_python_type(value)
+                    if converted is None or (isinstance(converted, float) and np.isnan(converted)):
+                        return default
+                    return float(converted)
+                except (ValueError, TypeError):
+                    return default
+            
+            series.append({
+                "index": int(idx),
+                "real_timestamp": row['timestamp'].isoformat(),
+                "simulated_timestamp": simulated_timestamp.isoformat(),
+                "progress": float(progress),  # 0.0 to 1.0
+                "flow": safe_float(row.get('flow_m3h'), 0.0),
+                "discharge_pressure": safe_float(row.get('discharge_pressure_bar'), 0.0),
+                "suction_pressure": safe_float(row.get('suction_pressure_bar'), 0.0),
+                "rpm": safe_float(row.get('rpm'), 1450.0),
+                "motor_power": safe_float(row.get('motor_power_kw'), 0.0),
+                "vibration": safe_float(row.get('vibration_mm_s'), 2.5),
+                "bearing_temp": safe_float(row.get('bearing_temp_c'), 65.0),
+                "efficiency": safe_float(row.get('efficiency'), 70.0),
+                "status": str(row.get('status', 'running')),
+            })
+        
+        # Calculate real-time span for display
+        real_span_days = (demo_data.iloc[-1]['timestamp'] - demo_data.iloc[0]['timestamp']).days
+        real_span_hours = (demo_data.iloc[-1]['timestamp'] - demo_data.iloc[0]['timestamp']).total_seconds() / 3600
+        playback_duration_seconds = 300  # 5 minutes
+        
+        return jsonify({
+            "pump_id": pump_id,
+            "simulation_mode": "6_months_in_5_minutes",
+            "total_points": len(series),
+            "playback_duration_seconds": playback_duration_seconds,
+            "real_data_span_days": int(real_span_days),
+            "real_data_span_hours": float(round(real_span_hours, 1)),
+            "start_real_time": demo_data.iloc[0]['timestamp'].isoformat(),
+            "end_real_time": demo_data.iloc[-1]['timestamp'].isoformat(),
+            "speed_multiplier": float(round(real_span_hours * 3600 / playback_duration_seconds, 0)),
+            "series": series
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error in demo simulation: {e}")
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/pump/<pump_id>/anomalies', methods=['GET'])
 def get_anomalies(pump_id):
@@ -1037,13 +1358,47 @@ def get_dashboard_summary():
 def get_pump_overview(pump_id):
     """Get comprehensive top-line overview for a pump"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        at_ts = _parse_at_param(request.args.get('at'))
+        latest_data = RealDataProvider.get_latest_reading(pump_id, at_ts)
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
-        rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        raw_rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul = ai_predictor.clamp_rul_hours(raw_rul)
         
         # Get pump master data
         pump_info = pump_master_df[pump_master_df['pump_id'] == pump_id].iloc[0]
+        master_health = convert_to_python_type(pump_info.get("health_score"))
+        display_health = float(master_health) if master_health is not None else health_index
+        specs = {
+            "pump_type": str(pump_info.get("pump_type", "")),
+            "pump_type_detail": str(pump_info.get("pump_type_detail", "")),
+            "manufacturer": str(pump_info.get("manufacturer", "")),
+            "model": str(pump_info.get("model", "")),
+            "installation_date": str(pump_info.get("installation_date", "")),
+            "rated_power_kw": float(convert_to_python_type(pump_info.get("rated_power_kw", 0))),
+            "rated_flow_m3h": float(convert_to_python_type(pump_info.get("rated_flow_m3h", 0))),
+            "rated_head_m": float(convert_to_python_type(pump_info.get("rated_head_m", 0))),
+            "flow_range_min_m3h": float(convert_to_python_type(pump_info.get("flow_range_min_m3h", 0))),
+            "flow_range_max_m3h": float(convert_to_python_type(pump_info.get("flow_range_max_m3h", 0))),
+            "head_range_min_m": float(convert_to_python_type(pump_info.get("head_range_min_m", 0))),
+            "head_range_max_m": float(convert_to_python_type(pump_info.get("head_range_max_m", 0))),
+            "rated_rpm": float(convert_to_python_type(pump_info.get("rated_rpm", 0))),
+            "seal_type": str(pump_info.get("seal_type", "")),
+            "bearing_type_de": str(pump_info.get("bearing_type_de", "")),
+            "bearing_type_nde": str(pump_info.get("bearing_type_nde", "")),
+            "impeller_type": str(pump_info.get("impeller_type", "")),
+            "location": str(pump_info.get("location", "")),
+            "criticality_level": str(pump_info.get("criticality_level", "")),
+            "serial_number": str(pump_info.get("serial_number", "")),
+            "warranty_expiry": str(pump_info.get("warranty_expiry", "")),
+            "last_overhaul": str(pump_info.get("last_overhaul", "")),
+            "min_safe_flow_m3h": float(convert_to_python_type(pump_info.get("min_safe_flow_m3h", 0))),
+            "max_safe_flow_m3h": float(convert_to_python_type(pump_info.get("max_safe_flow_m3h", 0))),
+            "max_motor_load_kw": float(convert_to_python_type(pump_info.get("max_motor_load_kw", 0))),
+            "max_suction_pressure_bar": float(convert_to_python_type(pump_info.get("max_suction_pressure_bar", 0))),
+            "efficiency_bep_percent": float(convert_to_python_type(pump_info.get("efficiency_bep_percent", 0))),
+            "npshr_m": float(convert_to_python_type(pump_info.get("npshr_m", 0))),
+        }
         
         # Get last maintenance
         pump_maintenance = maintenance_log_df[maintenance_log_df['pump_id'] == pump_id]
@@ -1063,12 +1418,12 @@ def get_pump_overview(pump_id):
         else:
             next_date = datetime.now() + timedelta(days=90)
         
-        # Determine operational status
-        if health_index > 80:
+        # Determine operational status using display health (uses master override if provided)
+        if display_health > 80:
             op_status = "Running"
-        elif health_index > 60:
+        elif display_health > 60:
             op_status = "Warning"
-        elif health_index > 40:
+        elif display_health > 40:
             op_status = "Standby"
         else:
             op_status = "Fault"
@@ -1079,13 +1434,15 @@ def get_pump_overview(pump_id):
             "site": "Unit 1",
             "model": str(pump_info.get('model', 'Unknown')),
             "location": f"Pump House - {pump_id}",
-            "health_score": float(round(health_index, 1)),
+            "health_score": float(round(display_health, 1)),
             "rul_hours": int(rul),
             "rul_days": int(rul / 24),
+            "rul_months": float(round(rul / 720, 1)),
             "operational_status": op_status,
             "last_maintenance": last_maintenance,
             "next_maintenance": next_date.strftime('%Y-%m-%d'),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "pump_master": specs
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 404
@@ -1094,8 +1451,13 @@ def get_pump_overview(pump_id):
 def get_vibration_data(pump_id):
     """Get vibration and mechanical health data"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        at_ts = _parse_at_param(request.args.get('at'))
+        latest_data = RealDataProvider.get_latest_reading(pump_id, at_ts)
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
+        if at_ts:
+            pump_ops_at = pump_ops[pump_ops['timestamp'] <= at_ts]
+            if not pump_ops_at.empty:
+                pump_ops = pump_ops_at
         
         if len(pump_ops) > 1000:
             pump_ops = pump_ops.tail(1000)
@@ -1174,8 +1536,13 @@ def get_vibration_data(pump_id):
 def get_thermal_data(pump_id):
     """Get thermal diagnostics data"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        at_ts = _parse_at_param(request.args.get('at'))
+        latest_data = RealDataProvider.get_latest_reading(pump_id, at_ts)
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
+        if at_ts:
+            pump_ops_at = pump_ops[pump_ops['timestamp'] <= at_ts]
+            if not pump_ops_at.empty:
+                pump_ops = pump_ops_at
         
         if len(pump_ops) > 1000:
             pump_ops = pump_ops.tail(1000)
@@ -1273,7 +1640,8 @@ def get_electrical_data(pump_id):
 def get_hydraulic_data(pump_id):
     """Get hydraulic and process alarm data"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        at_ts = _parse_at_param(request.args.get('at'))
+        latest_data = RealDataProvider.get_latest_reading(pump_id, at_ts)
         pump_info = pump_master_df[pump_master_df['pump_id'] == pump_id].iloc[0]
         
         flow = float(convert_to_python_type(latest_data['flow_m3h']))
@@ -1294,6 +1662,10 @@ def get_hydraulic_data(pump_id):
         
         # Seal leakage detection (pressure drop indicator)
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
+        if at_ts:
+            pump_ops_at = pump_ops[pump_ops['timestamp'] <= at_ts]
+            if not pump_ops_at.empty:
+                pump_ops = pump_ops_at
         if len(pump_ops) > 100:
             recent_dp = (pump_ops['discharge_pressure_bar'] - pump_ops['suction_pressure_bar']).tail(100).mean()
             dp_trend = delta_p - recent_dp
@@ -1430,9 +1802,9 @@ def get_ml_outputs(pump_id):
             failure_mode_probs = {k: v / total_prob for k, v in failure_mode_probs.items()}
         
         # RUL distribution (simplified - in production would use probabilistic model)
-        rul_best = int(rul * 1.2)
-        rul_median = int(rul)
-        rul_worst = int(rul * 0.7)
+        rul_best = ai_predictor.clamp_rul_hours(int(rul * 1.2))
+        rul_median = ai_predictor.clamp_rul_hours(int(rul))
+        rul_worst = ai_predictor.clamp_rul_hours(int(rul * 0.7))
         
         # Feature importance (simplified SHAP-like explanation)
         baseline = ai_predictor.baseline_stats.get(pump_id, {})
@@ -1466,7 +1838,10 @@ def get_ml_outputs(pump_id):
             "rul_distribution": {
                 "best_case_hours": rul_best,
                 "median_hours": rul_median,
-                "worst_case_hours": rul_worst
+                "worst_case_hours": rul_worst,
+                "best_case_months": float(round(rul_best / 720, 1)),
+                "median_months": float(round(rul_median / 720, 1)),
+                "worst_case_months": float(round(rul_worst / 720, 1))
             },
             "feature_importance": feature_importance[:5],  # Top 5
             "health_index": float(round(health_index, 1)),
@@ -1722,10 +2097,12 @@ def get_reports(pump_id):
 
 @app.route('/api/pump/<pump_id>/trend-signals', methods=['GET'])
 def get_trend_signals(pump_id):
-    """Get multi-signal time-series data for trend explorer"""
+    """Get multi-signal time-series data for trend explorer - supports up to 6 months (4320 hours)"""
     try:
         signals = request.args.getlist('signals')  # Comma-separated list
         hours = int(request.args.get('hours', 24))
+        # Cap at 6 months for performance
+        hours = min(hours, 4320)
         
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
         

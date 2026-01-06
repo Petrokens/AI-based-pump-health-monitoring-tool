@@ -72,18 +72,18 @@ const TrendExplorer = ({ pumpId, expanded = false }) => {
   };
 
   if (loading) {
-    return <div className="bg-slate-800 rounded-xl p-6 mb-6 animate-shimmer h-96"></div>;
+    return <div className="bg-[var(--bg-card)] rounded-xl p-6 mb-6 animate-shimmer h-96"></div>;
   }
 
   return (
-    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+    <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--border-color)]">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white">Historical Trend Explorer</h2>
+        <h2 className="text-xl font-bold text-[var(--text-primary)]">Historical Trend Explorer</h2>
         <div className="flex items-center space-x-4">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}
-            className="bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="bg-[var(--bg-input)] text-[var(--text-primary)] px-4 py-2 rounded-lg border border-[var(--border-light)] focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value={1}>Last 1 Hour</option>
             <option value={6}>Last 6 Hours</option>
@@ -107,8 +107,8 @@ const TrendExplorer = ({ pumpId, expanded = false }) => {
             onClick={() => toggleParameter(param.key)}
             className={`px-4 py-2 rounded-lg border transition-all ${
               selectedParams.includes(param.key)
-                ? 'border-slate-600 bg-slate-700 text-white'
-                : 'border-slate-700 bg-slate-900 text-slate-400 hover:bg-slate-800'
+                ? 'border-[var(--border-light)] bg-[var(--bg-secondary)] text-[var(--text-primary)]'
+                : 'border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
             }`}
           >
             <div className="flex items-center space-x-2">
@@ -122,33 +122,33 @@ const TrendExplorer = ({ pumpId, expanded = false }) => {
         ))}
       </div>
 
-      <div className="h-96 bg-slate-900 rounded-lg p-4">
+      <div className="h-96 bg-[var(--bg-primary)] rounded-lg p-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={trends}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis
               dataKey="timestamp"
               tickFormatter={formatTimestamp}
-              stroke="#94a3b8"
+              stroke="var(--text-secondary)"
               style={{ fontSize: '12px' }}
             />
             <YAxis
               yAxisId="left"
-              stroke="#94a3b8"
+              stroke="var(--text-secondary)"
               style={{ fontSize: '12px' }}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              stroke="#94a3b8"
+              stroke="var(--text-secondary)"
               style={{ fontSize: '12px' }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #475569',
+                backgroundColor: 'var(--bg-primary)',
+                border: `1px solid var(--border-color)`,
                 borderRadius: '8px',
-                color: '#e2e8f0'
+                color: 'var(--text-primary)'
               }}
               labelFormatter={(label) => new Date(label).toLocaleString()}
             />
@@ -179,20 +179,20 @@ const TrendExplorer = ({ pumpId, expanded = false }) => {
           const min = Math.min(...values);
 
           return (
-            <div key={param.key} className="bg-slate-900 rounded-lg p-3 border border-slate-700">
-              <p className="text-xs text-slate-400 mb-2">{param.label}</p>
+            <div key={param.key} className="bg-[var(--bg-secondary)] rounded-lg p-3 border border-[var(--border-color)]">
+              <p className="text-xs text-[var(--text-secondary)] mb-2">{param.label}</p>
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Avg:</span>
-                  <span className="text-white font-semibold">{avg.toFixed(1)} {param.unit}</span>
+                  <span className="text-[var(--text-tertiary)]">Avg:</span>
+                  <span className="text-[var(--text-primary)] font-semibold">{avg.toFixed(1)} {param.unit}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Max:</span>
-                  <span className="text-white">{max.toFixed(1)}</span>
+                  <span className="text-[var(--text-tertiary)]">Max:</span>
+                  <span className="text-[var(--text-primary)]">{max.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Min:</span>
-                  <span className="text-white">{min.toFixed(1)}</span>
+                  <span className="text-[var(--text-tertiary)]">Min:</span>
+                  <span className="text-[var(--text-primary)]">{min.toFixed(1)}</span>
                 </div>
               </div>
             </div>

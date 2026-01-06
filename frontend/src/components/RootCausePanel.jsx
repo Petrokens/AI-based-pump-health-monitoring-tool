@@ -25,8 +25,8 @@ const RootCausePanel = ({ pumpId }) => {
 
   if (loading || !data) {
     return (
-      <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-        <div className="animate-pulse">Loading root cause analysis...</div>
+      <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--border-color)]">
+        <div className="animate-pulse text-[var(--text-secondary)]">Loading root cause analysis...</div>
       </div>
     );
   }
@@ -49,42 +49,42 @@ const RootCausePanel = ({ pumpId }) => {
   };
 
   return (
-    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6">
-      <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+    <div className="bg-[var(--bg-card)] rounded-xl p-6 border border-[var(--border-color)] mb-6">
+      <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center">
         <Search className="w-6 h-6 mr-2 text-primary-500" />
         Root Cause & Diagnostics
       </h2>
 
       {/* Health Summary */}
-      <div className="bg-slate-700/50 rounded-lg p-4 mb-6">
+      <div className="bg-[var(--bg-secondary)]/50 rounded-lg p-4 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-400">Current Health Index</span>
+            <span className="text-xs text-[var(--text-secondary)]">Current Health Index</span>
             <p className={`text-3xl font-bold ${data.health_index >= 80 ? 'text-green-400' : data.health_index >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
               {data.health_index.toFixed(1)}%
             </p>
           </div>
           <div className="text-right">
-            <span className="text-xs text-slate-400">Detected Anomalies</span>
-            <p className="text-3xl font-bold text-white">{data.detected_anomalies}</p>
+            <span className="text-xs text-[var(--text-secondary)]">Detected Anomalies</span>
+            <p className="text-3xl font-bold text-[var(--text-primary)]">{data.detected_anomalies}</p>
           </div>
         </div>
       </div>
 
       {/* Contributing Signals */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center">
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center">
           <AlertTriangle className="w-4 h-4 mr-2" />
           Top Contributing Sensor Signals
         </h3>
         {data.top_contributing_signals.length > 0 ? (
           <div className="space-y-3">
             {data.top_contributing_signals.map((signal, idx) => (
-              <div key={idx} className="bg-slate-700/50 rounded-lg p-4">
+              <div key={idx} className="bg-[var(--bg-secondary)]/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center">
                     <div className={`w-3 h-3 rounded-full ${signal.impact === 'high' ? 'bg-red-400' : signal.impact === 'medium' ? 'bg-yellow-400' : 'bg-green-400'} mr-2`}></div>
-                    <span className="text-white font-semibold">{signal.signal}</span>
+                    <span className="text-[var(--text-primary)] font-semibold">{signal.signal}</span>
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-bold ${getImpactColor(signal.impact)}`}>
@@ -94,7 +94,7 @@ const RootCausePanel = ({ pumpId }) => {
                 </div>
                 <div className="mt-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Impact: </span>
+                    <span className="text-[var(--text-secondary)]">Impact: </span>
                     <span className={`font-semibold ${getImpactColor(signal.impact)} capitalize`}>
                       {signal.impact}
                     </span>
@@ -104,16 +104,16 @@ const RootCausePanel = ({ pumpId }) => {
             ))}
           </div>
         ) : (
-          <div className="bg-slate-700/30 rounded-lg p-6 text-center">
+          <div className="bg-[var(--bg-secondary)]/30 rounded-lg p-6 text-center">
             <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-            <p className="text-slate-400">No significant signal deviations detected</p>
+            <p className="text-[var(--text-secondary)]">No significant signal deviations detected</p>
           </div>
         )}
       </div>
 
       {/* Suggested Actions */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center">
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center">
           <Wrench className="w-4 h-4 mr-2" />
           Suggested Corrective Actions
         </h3>
@@ -134,9 +134,9 @@ const RootCausePanel = ({ pumpId }) => {
             ))}
           </div>
         ) : (
-          <div className="bg-slate-700/30 rounded-lg p-6 text-center">
+          <div className="bg-[var(--bg-secondary)]/30 rounded-lg p-6 text-center">
             <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-            <p className="text-slate-400">No immediate actions required</p>
+            <p className="text-[var(--text-secondary)]">No immediate actions required</p>
           </div>
         )}
       </div>

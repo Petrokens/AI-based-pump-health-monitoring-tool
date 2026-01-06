@@ -1,7 +1,9 @@
 import React from 'react';
-import { Activity, Clock } from 'lucide-react';
+import { Activity, Clock, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStatus }) => {
+  const { theme, toggleTheme } = useTheme();
   const getStatusColor = (status) => {
     switch (status) {
       case 'normal': return 'bg-green-500';
@@ -28,23 +30,23 @@ const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStat
   };
 
   return (
-    <header className="bg-slate-800 border-b border-slate-700 px-6 py-4">
+    <header className="bg-[var(--bg-header)] border-b border-[var(--border-color)] px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3">
             <Activity className="w-8 h-8 text-primary-500" />
             <div>
-              <h1 className="text-xl font-bold text-white">Petrokens Pump Predictive Maintenance</h1>
-              <p className="text-sm text-slate-400">Cooling Water Pump House - Unit 1</p>
+              <h1 className="text-xl font-bold text-[var(--text-primary)]">Petrokens Pump Predictive Maintenance</h1>
+              <p className="text-sm text-[var(--text-secondary)]">Cooling Water Pump House - Unit 1</p>
             </div>
           </div>
 
-          <div className="border-l border-slate-600 pl-6">
-            <label className="text-sm text-slate-400 block mb-1">Pump ID</label>
+          <div className="border-l border-[var(--border-light)] pl-6">
+            <label className="text-sm text-[var(--text-secondary)] block mb-1">Pump ID</label>
             <select
               value={selectedPump}
               onChange={(e) => onPumpChange(e.target.value)}
-              className="bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="bg-[var(--bg-input)] text-[var(--text-primary)] px-4 py-2 rounded-lg border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-primary-500"
               disabled={!pumps || pumps.length === 0}
             >
               {pumps && pumps.length > 0 ? (
@@ -61,15 +63,27 @@ const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStat
         </div>
 
         <div className="flex items-center space-x-6">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-[var(--bg-input)] border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] transition-colors"
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-5 h-5 text-[var(--text-primary)]" />
+            ) : (
+              <Moon className="w-5 h-5 text-[var(--text-primary)]" />
+            )}
+          </button>
+
           <div className="flex items-center space-x-3">
             <div className={`w-4 h-4 rounded-full ${getStatusColor(currentPumpStatus)}`}></div>
             <div>
-              <p className="text-sm text-slate-400">Alert Status</p>
-              <p className="text-white font-semibold">{getStatusText(currentPumpStatus)}</p>
+              <p className="text-sm text-[var(--text-secondary)]">Alert Status</p>
+              <p className="text-[var(--text-primary)] font-semibold">{getStatusText(currentPumpStatus)}</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-slate-400">
+          <div className="flex items-center space-x-2 text-[var(--text-secondary)]">
             <Clock className="w-4 h-4" />
             <div>
               <p className="text-xs">Last Update</p>

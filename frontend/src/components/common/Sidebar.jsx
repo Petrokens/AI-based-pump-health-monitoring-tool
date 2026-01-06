@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Brain, TrendingUp, Settings, Bell, BarChart3, Cpu } from 'lucide-react';
+import { LayoutDashboard, Brain, TrendingUp, Settings, Bell, BarChart3 } from 'lucide-react';
 
 const Sidebar = ({ selectedView, onViewChange }) => {
   const menuItems = [
@@ -8,12 +8,11 @@ const Sidebar = ({ selectedView, onViewChange }) => {
     { id: 'trends', icon: TrendingUp, label: 'Trend Explorer' },
     { id: 'alerts', icon: Bell, label: 'Alerts' },
     { id: 'reports', icon: BarChart3, label: 'Reports' },
-    { id: 'components', icon: Cpu, label: 'Components' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
-    <aside className="w-20 bg-slate-800 border-r border-slate-700 flex flex-col items-center py-6 space-y-6">
+    <aside className="w-20 bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] flex flex-col items-center py-6 space-y-6">
       <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center mb-4">
         <span className="text-white font-bold text-xl">PM</span>
       </div>
@@ -26,7 +25,7 @@ const Sidebar = ({ selectedView, onViewChange }) => {
             className={`w-16 h-16 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all ${
               selectedView === item.id
                 ? 'bg-primary-500 text-white'
-                : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]'
             }`}
             title={item.label}
           >

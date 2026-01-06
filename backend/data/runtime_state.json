@@ -1,0 +1,261 @@
+{
+  "PU-201A": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:16:42.993389",
+    "last_start": "2025-11-28T11:26:19.779976",
+    "last_stop": null,
+    "runtime_seconds": 964223.2134130006
+  },
+  "PU-202B": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T17:05:48.146386",
+    "last_start": "2025-11-28T11:26:19.779984",
+    "last_stop": null,
+    "runtime_seconds": 884368.3664020001
+  },
+  "PU-203C": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T17:04:06.474618",
+    "last_start": "2025-12-08T17:03:18.398251",
+    "last_stop": "2025-12-08T17:03:07.288815",
+    "runtime_seconds": 884255.5851940003
+  },
+  "PU-204A": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T14:58:33.610121",
+    "last_start": "2025-11-28T11:26:19.779990",
+    "last_stop": null,
+    "runtime_seconds": 963133.830131
+  },
+  "PU-205D": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T14:33:54.507485",
+    "last_start": "2025-11-28T11:26:19.779992",
+    "last_stop": null,
+    "runtime_seconds": 961654.727493
+  },
+  "PU-206E": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T17:24:28.205766",
+    "last_start": "2025-11-28T11:26:19.779995",
+    "last_stop": null,
+    "runtime_seconds": 885488.4257710002
+  },
+  "PU-207F": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T17:05:55.570205",
+    "last_start": "2025-11-28T11:26:19.779997",
+    "last_stop": null,
+    "runtime_seconds": 884375.790208
+  },
+  "PU-208G": {
+    "is_running": true,
+    "last_state_change": "2025-11-28T11:26:19.779999",
+    "last_start": "2025-11-28T11:26:19.779999",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PU-209H": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T17:09:48.136870",
+    "last_start": "2025-11-28T11:26:19.780001",
+    "last_stop": null,
+    "runtime_seconds": 884608.3568690001
+  },
+  "PU-210J": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T14:34:53.703370",
+    "last_start": "2025-12-08T17:28:25.936615",
+    "last_stop": "2025-12-08T17:28:19.124480",
+    "runtime_seconds": 961707.1112319984
+  },
+  "PU-211K": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T14:47:10.641059",
+    "last_start": "2025-11-28T11:26:19.780005",
+    "last_stop": null,
+    "runtime_seconds": 962450.8610540002
+  },
+  "PU-212L": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T14:20:36.676034",
+    "last_start": "2025-11-28T11:26:19.780008",
+    "last_stop": null,
+    "runtime_seconds": 960856.896026
+  },
+  "PUMP_001": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954678",
+    "last_start": "2025-12-08T16:35:00.954678",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_002": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954691",
+    "last_start": "2025-12-08T16:35:00.954691",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_003": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954694",
+    "last_start": "2025-12-08T16:35:00.954694",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_004": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954697",
+    "last_start": "2025-12-08T16:35:00.954697",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_005": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954699",
+    "last_start": "2025-12-08T16:35:00.954699",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_006": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954701",
+    "last_start": "2025-12-08T16:35:00.954701",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_007": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954703",
+    "last_start": "2025-12-08T16:35:00.954703",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_008": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954705",
+    "last_start": "2025-12-08T16:35:00.954705",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_009": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954708",
+    "last_start": "2025-12-08T16:35:00.954708",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_010": {
+    "is_running": true,
+    "last_state_change": "2025-12-08T16:35:00.954710",
+    "last_start": "2025-12-08T16:35:00.954710",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_A1": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006739",
+    "last_start": "2025-12-09T15:37:43.006739",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_A2": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006966",
+    "last_start": "2025-12-09T15:37:43.006966",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_A3": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006975",
+    "last_start": "2025-12-09T15:37:43.006975",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_A4": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006978",
+    "last_start": "2025-12-09T15:37:43.006978",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_A5": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006980",
+    "last_start": "2025-12-09T15:37:43.006980",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_B1": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006982",
+    "last_start": "2025-12-09T15:37:43.006982",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_B2": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006984",
+    "last_start": "2025-12-09T15:37:43.006984",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_B3": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006986",
+    "last_start": "2025-12-09T15:37:43.006986",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_B4": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006988",
+    "last_start": "2025-12-09T15:37:43.006988",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_B5": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006990",
+    "last_start": "2025-12-09T15:37:43.006990",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_C1": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006993",
+    "last_start": "2025-12-09T15:37:43.006993",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_C2": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006995",
+    "last_start": "2025-12-09T15:37:43.006995",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_C3": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006997",
+    "last_start": "2025-12-09T15:37:43.006997",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_C4": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.006999",
+    "last_start": "2025-12-09T15:37:43.006999",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  },
+  "PUMP_C5": {
+    "is_running": true,
+    "last_state_change": "2025-12-09T15:37:43.007001",
+    "last_start": "2025-12-09T15:37:43.007001",
+    "last_stop": null,
+    "runtime_seconds": 0.0
+  }
+}
