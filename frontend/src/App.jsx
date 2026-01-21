@@ -22,7 +22,10 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { fetchPumps } from './services/api';
 
+import LandingPage from './components/LandingPage';
+
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedPump, setSelectedPump] = useState('P-101A');
   const [pumps, setPumps] = useState([]);
   const [selectedView, setSelectedView] = useState('dashboard');
@@ -31,10 +34,13 @@ function App() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {
+    // Only start polling if logged in
+    if (!isLoggedIn) return;
+
     let pollingInterval = 10000; // Start with 10 seconds (reduce spam)
     let intervalId = null;
     let consecutiveFailures = 0;
-    
+
     // Initial load with exponential backoff retry logic
     const attemptLoad = async (retries = 5) => {
       let retryDelay = 2000;
@@ -58,9 +64,9 @@ function App() {
         }
       }
     };
-    
+
     attemptLoad();
-    
+
     // Adaptive polling: slower when errors occur, faster when successful
     const scheduleNextPoll = () => {
       if (intervalId) {
@@ -80,7 +86,7 @@ function App() {
         scheduleNextPoll();
       }, pollingInterval);
     };
-    
+
     // Start polling after initial load
     scheduleNextPoll();
 
@@ -89,7 +95,7 @@ function App() {
         clearTimeout(intervalId);
       }
     };
-  }, []);
+  }, [isLoggedIn]);
 
   const loadPumps = async () => {
     try {
@@ -114,7 +120,7 @@ function App() {
         error._logged = true;
         console.error('Error loading pumps:', error);
       }
-      
+
       let errorMessage = 'Failed to connect to backend.';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         errorMessage = 'Backend request timed out. The server may be processing large datasets.';
@@ -130,113 +136,117 @@ function App() {
     }
   };
 
+  if (!isLoggedIn) {
+    return <LandingPage onLogin={() => setIsLoggedIn(true)} />;
+  }
+
   const currentPump = pumps.find(p => p.id === selectedPump);
 
   return (
     <ThemeProvider>
       <DemoProvider>
         <div className="flex h-screen bg-[var(--bg-primary)]">
-          <Sidebar 
+          <Sidebar
             selectedView={selectedView}
             onViewChange={setSelectedView}
           />
-          
+
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Header 
+            <Header
               selectedPump={selectedPump}
               onPumpChange={setSelectedPump}
               pumps={pumps}
               lastUpdate={lastUpdate}
               currentPumpStatus={currentPump?.status}
             />
-            
+
             <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-4"></div>
-              <p className="text-[var(--text-secondary)]">Loading pump data...</p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
-                <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
-                <p className="text-[var(--text-secondary)] mb-4">{error}</p>
-                <button
-                  onClick={loadPumps}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Retry Connection
-                </button>
-              </div>
-            </div>
-          ) : pumps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
-                <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
-                <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {selectedView === 'dashboard' && (
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+                  <p className="text-[var(--text-secondary)]">Loading pump data...</p>
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
+                    <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
+                    <p className="text-[var(--text-secondary)] mb-4">{error}</p>
+                    <button
+                      onClick={loadPumps}
+                      className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      Retry Connection
+                    </button>
+                  </div>
+                </div>
+              ) : pumps.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
+                    <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
+                    <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
+                  </div>
+                </div>
+              ) : (
                 <>
-                  <PumpOverview pumpId={selectedPump} />
-                  <SectionToggle title="📊 Demo Simulation: 6 Months in 5 Minutes" subtitle="Time-lapse playback of 6 months operational data" defaultOpen={true}>
-                    <DemoSimulation pumpId={selectedPump} />
-                  </SectionToggle>
-                  <SectionToggle title="A. Seal Health" subtitle="Seal failure forecast & risk">
-                    <SealFailureForecast pumpId={selectedPump} />
-                  </SectionToggle>
-                  <SectionToggle title="B. Bearing Failure Forecast" subtitle="Health, RUL, and actions">
-                    <BearingFailureForecast pumpId={selectedPump} />
-                  </SectionToggle>
-                  <SectionToggle title="C. Cavitation Prediction" subtitle="NPSH vs cavitation risk">
-                    <CavitationPrediction pumpId={selectedPump} />
-                  </SectionToggle>
-                  <SectionToggle title="D. Vibration Anomaly Detection" subtitle="FFT + fault identification">
-                    <VibrationAnomalyDetection pumpId={selectedPump} />
-                  </SectionToggle>
-                  <SectionToggle title="E. Motor Overloading Prediction" subtitle="Motor draw vs hydraulic load">
-                    <MotorOverloadingPrediction pumpId={selectedPump} />
-                  </SectionToggle>
-                  <SectionToggle title="F. Performance Degradation" subtitle="Curve deviation, efficiency drop">
-                    <PerformanceDegradation pumpId={selectedPump} />
-                  </SectionToggle>
+                  {selectedView === 'dashboard' && (
+                    <>
+                      <PumpOverview pumpId={selectedPump} />
+                      <SectionToggle title="📊 Demo Simulation: 6 Months in 5 Minutes" subtitle="Time-lapse playback of 6 months operational data" defaultOpen={true}>
+                        <DemoSimulation pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="A. Seal Health" subtitle="Seal failure forecast & risk">
+                        <SealFailureForecast pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="B. Bearing Failure Forecast" subtitle="Health, RUL, and actions">
+                        <BearingFailureForecast pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="C. Cavitation Prediction" subtitle="NPSH vs cavitation risk">
+                        <CavitationPrediction pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="D. Vibration Anomaly Detection" subtitle="FFT + fault identification">
+                        <VibrationAnomalyDetection pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="E. Motor Overloading Prediction" subtitle="Motor draw vs hydraulic load">
+                        <MotorOverloadingPrediction pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="F. Performance Degradation" subtitle="Curve deviation, efficiency drop">
+                        <PerformanceDegradation pumpId={selectedPump} />
+                      </SectionToggle>
+                    </>
+                  )}
+
+                  {selectedView === 'insights' && (
+                    <>
+                      <MLOutputs pumpId={selectedPump} />
+                      <RootCausePanel pumpId={selectedPump} />
+                      <AIInsights pumpId={selectedPump} expanded={true} />
+                    </>
+                  )}
+
+                  {selectedView === 'trends' && (
+                    <TrendExplorer pumpId={selectedPump} expanded={true} />
+                  )}
+
+                  {selectedView === 'analytics' && (
+                    <AnalyticsDashboard pumpId={selectedPump} />
+                  )}
+
+                  {selectedView === 'alerts' && (
+                    <AlertsWorkflow pumpId={selectedPump} />
+                  )}
+
+                  {selectedView === 'reports' && (
+                    <ReportsKPIs pumpId={selectedPump} />
+                  )}
+
+                  {selectedView === 'settings' && (
+                    <Settings />
+                  )}
                 </>
               )}
-              
-              {selectedView === 'insights' && (
-                <>
-                  <MLOutputs pumpId={selectedPump} />
-                  <RootCausePanel pumpId={selectedPump} />
-                  <AIInsights pumpId={selectedPump} expanded={true} />
-                </>
-              )}
-              
-              {selectedView === 'trends' && (
-                <TrendExplorer pumpId={selectedPump} expanded={true} />
-              )}
-
-              {selectedView === 'analytics' && (
-                <AnalyticsDashboard pumpId={selectedPump} />
-              )}
-
-              {selectedView === 'alerts' && (
-                <AlertsWorkflow pumpId={selectedPump} />
-              )}
-
-              {selectedView === 'reports' && (
-                <ReportsKPIs pumpId={selectedPump} />
-              )}
-
-              {selectedView === 'settings' && (
-                <Settings />
-              )}
-            </>
-          )}
-        </main>
-      </div>
-    </div>
+            </main>
+          </div>
+        </div>
       </DemoProvider>
     </ThemeProvider>
   );
