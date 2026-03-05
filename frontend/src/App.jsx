@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import Header from './components/common/Header';
 import Sidebar from './components/Sidebar';
 import AIInsights from './components/AIInsights';
@@ -23,6 +24,11 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { fetchPumps } from './services/api';
 
 import LandingPage from './components/LandingPage';
+
+const VALID_VIEWS = ['dashboard', 'analytics', 'insights', 'trends', 'alerts', 'reports', 'settings'];
+function viewOrDashboard(view) {
+  return VALID_VIEWS.includes(view) ? view : 'dashboard';
+}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -136,59 +142,111 @@ function App() {
     }
   };
 
-  if (!isLoggedIn) {
-    return <LandingPage onLogin={() => setIsLoggedIn(true)} />;
-  }
+  const navigate = useNavigate();
 
-  const currentPump = pumps.find(p => p.id === selectedPump);
+  if (!isLoggedIn) {
+    return (
+      <LandingPage
+        onLogin={() => {
+          setIsLoggedIn(true);
+          navigate('/app/dashboard');
+        }}
+      />
+    );
+  }
 
   return (
     <ThemeProvider>
       <DemoProvider>
-        <div className="flex h-screen bg-[var(--bg-primary)]">
-          <Sidebar
-            selectedView={selectedView}
-            onViewChange={setSelectedView}
+        <Routes>
+          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
+          <Route
+            path="/app/:view"
+            element={
+              <MainAppLayout
+                pumps={pumps}
+                selectedPump={selectedPump}
+                setSelectedPump={setSelectedPump}
+                loadPumps={loadPumps}
+                loading={loading}
+                error={error}
+                lastUpdate={lastUpdate}
+              />
+            }
           />
+          <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+        </Routes>
+      </DemoProvider>
+    </ThemeProvider>
+  );
+}
 
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Header
-              selectedPump={selectedPump}
-              onPumpChange={setSelectedPump}
-              pumps={pumps}
-              lastUpdate={lastUpdate}
-              currentPumpStatus={currentPump?.status}
-            />
+function MainAppLayout({
+  pumps,
+  selectedPump,
+  setSelectedPump,
+  loadPumps,
+  loading,
+  error,
+  lastUpdate,
+}) {
+  const { view } = useParams();
+  const navigate = useNavigate();
+  const selectedView = viewOrDashboard(view);
+  const currentPump = pumps.find((p) => p.id === selectedPump);
 
-            <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-4"></div>
-                  <p className="text-[var(--text-secondary)]">Loading pump data...</p>
-                </div>
-              ) : error ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
-                    <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
-                    <p className="text-[var(--text-secondary)] mb-4">{error}</p>
-                    <button
-                      onClick={loadPumps}
-                      className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                      Retry Connection
-                    </button>
-                  </div>
-                </div>
-              ) : pumps.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
-                    <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
-                    <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {selectedView === 'dashboard' && (
+  // Redirect invalid view param to dashboard (shareable URLs stay valid)
+  React.useEffect(() => {
+    if (view && !VALID_VIEWS.includes(view)) {
+      navigate('/app/dashboard', { replace: true });
+    }
+  }, [view, navigate]);
+
+  const handleViewChange = (id) => navigate(`/app/${id}`);
+
+  return (
+    <div className="flex h-screen bg-[var(--bg-primary)]">
+      <Sidebar selectedView={selectedView} onViewChange={handleViewChange} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header
+          selectedPump={selectedPump}
+          onPumpChange={setSelectedPump}
+          pumps={pumps}
+          lastUpdate={lastUpdate}
+          currentPumpStatus={currentPump?.status}
+        />
+
+        <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-4" aria-hidden />
+              <p className="text-[var(--text-secondary)]">Loading pump data...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
+                <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
+                <p className="text-[var(--text-secondary)] mb-4">{error}</p>
+                <button
+                  onClick={loadPumps}
+                  className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Retry Connection
+                </button>
+              </div>
+            </div>
+          ) : pumps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
+                <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
+                <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {selectedView === 'dashboard' && (
                     <>
                       <PumpOverview pumpId={selectedPump} />
                       <SectionToggle title="📊 Demo Simulation: 6 Months in 5 Minutes" subtitle="Time-lapse playback of 6 months operational data" defaultOpen={true}>
@@ -247,8 +305,6 @@ function App() {
             </main>
           </div>
         </div>
-      </DemoProvider>
-    </ThemeProvider>
   );
 }
 
@@ -259,8 +315,11 @@ const SectionToggle = ({ title, subtitle, children, defaultOpen = false }) => {
   return (
     <div className="bg-[var(--bg-card)]/80 border border-[var(--border-color)] rounded-2xl mb-4 shadow-lg" style={{ boxShadow: 'var(--shadow-lg)' }}>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
+        aria-expanded={open}
+        aria-controls={`section-${title.replace(/\s+/g, '-')}`}
       >
         <div>
           <p className="text-sm font-semibold text-[var(--text-primary)]">{title}</p>
@@ -268,7 +327,7 @@ const SectionToggle = ({ title, subtitle, children, defaultOpen = false }) => {
         </div>
         {open ? <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronRight className="w-4 h-4 text-[var(--text-tertiary)]" />}
       </button>
-      {open && <div className="px-2 pb-3"><div className="rounded-xl overflow-hidden">{children}</div></div>}
+      {open && <div id={`section-${title.replace(/\s+/g, '-')}`} className="px-2 pb-3" role="region" aria-label={title}><div className="rounded-xl overflow-hidden">{children}</div></div>}
     </div>
   );
 };

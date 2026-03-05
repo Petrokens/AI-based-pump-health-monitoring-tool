@@ -3,15 +3,27 @@ import axios from 'axios';
 // Determine API base URL based on environment
 // Production: Use Render API
 // Development: Use local proxy or environment variable
-const getApiBaseUrl = () => {
-  // Check if we're in production (deployed on Render or other hosting)
-  if (import.meta.env.PROD) {
-    // In production, use the Render API
-    return import.meta.env.VITE_API_BASE_URL || 'https://ai-based-pump-health-monitoring-tool.onrender.com/api';
+// Ensure absolute API URLs include /api path (backend serves all routes under /api/)
+const normalizeApiBaseUrl = (url) => {
+  if (!url || typeof url !== 'string') return url;
+  const trimmed = url.trim().replace(/\/+$/, '');
+  if (trimmed.startsWith('/')) return trimmed || '/api';
+  try {
+    const parsed = new URL(trimmed);
+    const path = parsed.pathname.replace(/\/+$/, '');
+    if (!path.endsWith('/api')) parsed.pathname = path ? `${path}/api` : '/api';
+    return parsed.toString().replace(/\/+$/, '');
+  } catch {
+    return trimmed;
   }
-  
-  // In development, check for environment variable or use local proxy
-  return import.meta.env.VITE_API_BASE_URL || '/api';
+};
+
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (import.meta.env.PROD) {
+    return normalizeApiBaseUrl(envUrl || 'https://t1s9kxj1-5000.inc1.devtunnels.ms');
+  }
+  return normalizeApiBaseUrl(envUrl || '/api');
 };
 
 // Check localStorage for custom API URL (from Settings)
@@ -30,9 +42,9 @@ const getCustomApiUrl = () => {
   return null;
 };
 
-// Get the final API base URL (custom settings override defaults)
+// Get the final API base URL (custom settings override defaults); always normalize so /api is included
 const customUrl = getCustomApiUrl();
-const API_BASE_URL = customUrl || getApiBaseUrl();
+const API_BASE_URL = (customUrl ? normalizeApiBaseUrl(customUrl) : null) || getApiBaseUrl();
 
 // Log API URL in development or first load
 if (import.meta.env.DEV || !sessionStorage.getItem('api_url_logged')) {
@@ -50,7 +62,7 @@ const api = axios.create({
 
 // Function to update API base URL dynamically (for Settings page)
 export const updateApiBaseUrl = (newUrl) => {
-  api.defaults.baseURL = newUrl;
+  api.defaults.baseURL = newUrl ? normalizeApiBaseUrl(newUrl) : api.defaults.baseURL;
 };
 
 // Track consecutive errors to reduce spam

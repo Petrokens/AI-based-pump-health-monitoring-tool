@@ -10,12 +10,21 @@ import numpy as np
 import pandas as pd
 import json
 import os
+import logging
 import threading
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional, Tuple
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
+
+# Structured logging for production
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("pump-api")
 
 app = Flask(__name__)
 
@@ -47,6 +56,59 @@ def after_request(response):
     if 'Access-Control-Allow-Methods' not in response.headers:
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
     return response
+
+
+# ----------------------- Error handling & validation -----------------------
+
+def api_error(message: str, status_code: int = 400, code: Optional[str] = None) -> Tuple[dict, int]:
+    """Return a consistent JSON error payload."""
+    return jsonify({"error": message, "code": code or f"ERR_{status_code}"}), status_code
+
+
+@app.errorhandler(400)
+def bad_request(e):
+    return api_error(getattr(e, "description", "Bad request"), 400, "BAD_REQUEST")
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return api_error(getattr(e, "description", "Resource not found"), 404, "NOT_FOUND")
+
+
+@app.errorhandler(500)
+def server_error(e):
+    logger.exception("Unhandled error")
+    return api_error("An unexpected error occurred", 500, "INTERNAL_ERROR")
+
+
+def safe_int(value: Any, default: int, min_val: Optional[int] = None, max_val: Optional[int] = None) -> int:
+    """Parse query param to int with bounds; returns default on invalid input."""
+    try:
+        if value is None or value == "":
+            return default
+        n = int(float(value))
+        if min_val is not None and n < min_val:
+            return min_val
+        if max_val is not None and n > max_val:
+            return max_val
+        return n
+    except (ValueError, TypeError):
+        return default
+
+
+def safe_float_param(value: Any, default: float, min_val: Optional[float] = None, max_val: Optional[float] = None) -> float:
+    """Parse query param to float with bounds; returns default on invalid input."""
+    try:
+        if value is None or value == "":
+            return default
+        f = float(value)
+        if min_val is not None and f < min_val:
+            return min_val
+        if max_val is not None and f > max_val:
+            return max_val
+        return f
+    except (ValueError, TypeError):
+        return default
 
 # Lightweight cache for expensive endpoints
 PUMP_LIST_CACHE = {
@@ -128,18 +190,18 @@ def _refresh_pump_master_if_changed():
             PUMP_LIST_CACHE["data"] = None
             PUMP_LIST_CACHE["timestamp"] = datetime.min
 
-        print("🔄 Reloaded pump_master.csv; pumps:", list(pump_master_df['pump_id'].values))
+        logger.info("Reloaded pump_master.csv; pumps: %s", list(pump_master_df['pump_id'].values))
         return True
 
 try:
-    print("📂 Loading CSV data files...")
+    logger.info("Loading CSV data files...")
 
     # Load pump master (small file, load all)
     pump_master_df = _load_pump_master()
     PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
 
     # Load operation log with optimizations - use dtype to reduce memory and speed
-    print("  Loading operation logs (this may take a moment for large files)...")
+    logger.info("Loading operation logs (this may take a moment for large files)...")
     operation_log_df = pd.read_csv(
         os.path.join(DATA_DIR, 'operation_log.csv'),
         dtype={
@@ -172,14 +234,12 @@ try:
     failure_data_df.columns = failure_data_df.columns.str.strip()
     failure_data_df['failure_date'] = pd.to_datetime(failure_data_df['failure_date'])
     
-    print("✓ Successfully loaded CSV data files")
-    print(f"  - Operation logs: {len(operation_log_df):,} records")
-    print(f"  - Maintenance logs: {len(maintenance_log_df)} records")
-    print(f"  - Failure data: {len(failure_data_df)} records")
-    print(f"  - Pumps: {list(pump_master_df['pump_id'].values)}")
-    
+    logger.info(
+        "Successfully loaded CSV data - operation_logs=%s maintenance=%s failure=%s pumps=%s",
+        len(operation_log_df), len(maintenance_log_df), len(failure_data_df), list(pump_master_df['pump_id'].values),
+    )
 except Exception as e:
-    print(f"⚠ ERROR: Could not load CSV files: {e}")
+    logger.critical("Could not load CSV files: %s", e)
     exit(1)
 
 # ==================== Runtime State Tracking ====================
@@ -216,7 +276,7 @@ def _write_runtime_state_file(snapshot: Dict[str, Dict[str, Any]]):
         with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as fh:
             json.dump(snapshot, fh, indent=2)
     except Exception as exc:
-        print(f"⚠ Unable to persist runtime state: {exc}")
+        logger.warning("Unable to persist runtime state: %s", exc)
 
 
 runtime_state: Dict[str, Dict[str, Any]] = _read_runtime_state_file()
@@ -234,7 +294,7 @@ def _maybe_reload_pump_master():
         _refresh_pump_master_if_changed()
     except Exception as exc:
         # Non-fatal: log and continue with existing in-memory data
-        print(f"⚠ Pump master reload skipped: {exc}")
+        logger.warning("Pump master reload skipped: %s", exc)
 
 
 for pump_id_value in pump_master_df["pump_id"].values:
@@ -437,14 +497,14 @@ class PredictiveMaintenanceAI:
     
     def train_models(self):
         """Train ML models on historical data"""
-        print("\n🧠 Training AI models on historical data...")
+        logger.info("Training AI models on historical data...")
         
         # Limit data for faster training - use recent data or sample
         # For large datasets, use last 10,000 rows or sample every Nth row
         MAX_TRAINING_SAMPLES = 10000
         
         if len(operation_log_df) > MAX_TRAINING_SAMPLES:
-            print(f"  Large dataset detected ({len(operation_log_df):,} rows). Sampling for faster training...")
+            logger.info("Large dataset detected (%s rows). Sampling for faster training...", len(operation_log_df))
             # Use last MAX_TRAINING_SAMPLES rows (most recent data)
             df = operation_log_df.tail(MAX_TRAINING_SAMPLES).copy()
         else:
@@ -508,9 +568,9 @@ class PredictiveMaintenanceAI:
                 iso_forest.fit(scaled_features)
                 self.anomaly_detectors[pump_id] = iso_forest
                 
-                print(f"  ✓ Trained model for {pump_id} on {len(pump_data_clean)} samples")
+                logger.info("Trained model for %s on %s samples", pump_id, len(pump_data_clean))
             else:
-                print(f"  ⚠ Insufficient data for {pump_id}")
+                logger.warning("Insufficient data for %s", pump_id)
     
     def predict_anomaly_score(self, pump_id: str, sensor_data: Dict) -> Dict[str, Any]:
         """Predict anomaly score using trained model"""
@@ -931,9 +991,7 @@ def get_pumps():
                 "ai_confidence": float(round(convert_to_python_type(anomaly_result.get('confidence', 0)) * 100, 1))
             })
         except Exception as e:
-            import traceback
-            print(f"Error processing {pump_id}: {e}")
-            print(traceback.format_exc())
+            logger.exception("Error processing %s: %s", pump_id, e)
             continue
     
     # Update cache
@@ -1110,12 +1168,11 @@ def get_pump_kpis(pump_id):
 def get_pump_trends(pump_id):
     """Get historical trend data from CSV - supports up to 6 months (4320 hours)"""
     try:
-        hours = int(request.args.get('hours', 24))
-        # Cap at 6 months for performance
-        hours = min(hours, 4320)
+        hours = safe_int(request.args.get('hours'), 24, 1, 4320)
         trends = RealDataProvider.get_historical_data(pump_id, hours)
         return jsonify(trends)
     except Exception as e:
+        logger.warning("get_pump_trends failed for %s: %s", pump_id, e)
         return jsonify({"error": str(e)}), 404
 
 
@@ -1123,9 +1180,8 @@ def get_pump_trends(pump_id):
 def get_fast_forward(pump_id):
     """Provide dense time-series data for fast-forward playback."""
     try:
-        speed = float(request.args.get('speed', 100))
-        window_hours = int(request.args.get('window_hours', 6))
-        window_hours = max(1, min(window_hours, 24))
+        speed = safe_float_param(request.args.get('speed'), 100.0, 1.0, 10000.0)
+        window_hours = safe_int(request.args.get('window_hours'), 6, 1, 24)
 
         series = RealDataProvider.get_fast_forward_series(pump_id, window_hours)
         if not series:
@@ -1251,9 +1307,7 @@ def get_demo_simulation(pump_id):
             "series": series
         })
     except Exception as e:
-        import traceback
-        print(f"Error in demo simulation: {e}")
-        print(traceback.format_exc())
+        logger.exception("Error in demo simulation: %s", e)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/pump/<pump_id>/anomalies', methods=['GET'])
@@ -1367,7 +1421,7 @@ def get_dashboard_summary():
                 health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
                 health_val = convert_to_python_type(health_index)
                 pumps_data.append({"pump_id": str(pump_id), "health": float(health_val) if health_val is not None else 85.0})
-            except:
+            except Exception:
                 continue
         
         total_pumps = len(pumps_data)
@@ -2135,9 +2189,7 @@ def get_trend_signals(pump_id):
     """Get multi-signal time-series data for trend explorer - supports up to 6 months (4320 hours)"""
     try:
         signals = request.args.getlist('signals')  # Comma-separated list
-        hours = int(request.args.get('hours', 24))
-        # Cap at 6 months for performance
-        hours = min(hours, 4320)
+        hours = safe_int(request.args.get('hours'), 24, 1, 4320)
         
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
         
@@ -2191,13 +2243,8 @@ def get_trend_signals(pump_id):
 # ==================== Main ====================
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("🚀 Starting AI-Powered Pump Predictive Maintenance Backend")
-    print("="*60)
-    print(f"📊 Data Source: REAL CSV files from {DATA_DIR}")
-    print(f"🧠 AI Models: Isolation Forest (Anomaly Detection)")
-    print(f"📈 Feature Engineering: 10+ derived features")
-    print(f"🔍 Pumps Available: {list(operation_log_df['pump_id'].unique())}")
-    print(f"📡 API: http://localhost:5000/api/")
-    print("="*60 + "\n")
+    logger.info(
+        "Starting AI-Powered Pump Predictive Maintenance Backend - data=%s pumps=%s",
+        DATA_DIR, list(operation_log_df['pump_id'].unique()),
+    )
     app.run(debug=True, host='0.0.0.0', port=5000)

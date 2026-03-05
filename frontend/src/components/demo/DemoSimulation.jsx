@@ -162,19 +162,19 @@ const DemoSimulation = ({ pumpId }) => {
     }
   };
   
-  // Update context when current point changes (even when paused)
+  // Update context when current point changes (deferred to avoid "Cannot update while rendering" warning)
   useEffect(() => {
-    if (simulationData && simulationData.series && simulationData.series[currentIndex]) {
-      const currentPoint = simulationData.series[currentIndex];
-      if (isPlaying || currentIndex === 0) {
-        updateDemoState({
-          isActive: isPlaying,
-          currentTimestamp: currentPoint.simulated_timestamp,
-          realTimestamp: currentPoint.real_timestamp,
-          progress: currentPoint.progress,
-        });
-      }
-    }
+    if (!simulationData?.series?.[currentIndex]) return;
+    const currentPoint = simulationData.series[currentIndex];
+    if (!(isPlaying || currentIndex === 0)) return;
+    const payload = {
+      isActive: isPlaying,
+      currentTimestamp: currentPoint.simulated_timestamp,
+      realTimestamp: currentPoint.real_timestamp,
+      progress: currentPoint.progress,
+    };
+    const id = setTimeout(() => updateDemoState(payload), 0);
+    return () => clearTimeout(id);
   }, [currentIndex, simulationData, isPlaying, updateDemoState]);
   
   // Cleanup on unmount

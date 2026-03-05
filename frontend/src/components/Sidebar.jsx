@@ -18,7 +18,7 @@ const Sidebar = ({ selectedView, onViewChange }) => {
         <span className="text-white font-bold text-xl">PM</span>
       </div>
 
-      <nav className="flex-1 flex flex-col space-y-2">
+      <nav className="flex-1 flex flex-col space-y-2" aria-label="App navigation">
         {menuItems.map((item) => (
           <button
             key={item.id}
@@ -29,6 +29,7 @@ const Sidebar = ({ selectedView, onViewChange }) => {
                 : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]'
             }`}
             title={item.label}
+            aria-current={selectedView === item.id ? 'page' : undefined}
           >
             <item.icon className="w-6 h-6" />
             <span className="text-xs">{item.label.split(' ')[0]}</span>
