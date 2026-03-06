@@ -74,19 +74,28 @@ Industrial pump fleets (oil & gas, water, chemicals, power, mining) face:
 
 **Client-based revenue & profit (illustrative):**
 
-| Metric | Assumption | Value |
-|--------|------------|--------|
-| **Active clients (target)** | Paying sites/tenants | 20 per month (steady state) |
-| **Blended ARPU** | Mix of Starter / Professional / Enterprise | $800 / client / month |
-| **Monthly recurring revenue (MRR)** | 20 × $800 | **$16,000** |
-| **Annual recurring revenue (ARR)** | MRR × 12 | **$192,000** |
-| **Professional services (one-time, annual)** | ~40% of clients need onboarding/year | ~8 × $3,000 ≈ **$24,000** |
-| **Total annual revenue** | ARR + services | **~$216,000** |
-| **Gross margin (SaaS)** | After infra, support, success | ~70% |
-| **Annual gross profit (SaaS)** | ARR × 70% | **~$134,400** |
-| **Annual gross profit (total)** | SaaS profit + services margin (~50%) | **~$146,400** |
+**Base assumptions:** Blended ARPU **$800 / client / month** (Starter / Professional / Enterprise mix). Gross margin ~70% (SaaS), services margin ~50%. Professional services ~$3,000 per onboarding.
 
-*At 20 active clients per month, year-one profit (after direct costs) is on the order of **~$145k–$150k**. Scaling to 50 clients at similar ARPU yields ~$480k ARR and ~$360k+ gross profit.*
+**Growth roadmap — clients, revenue & profit by horizon:**
+
+| Horizon | Active clients (target) | MRR | ARR (run-rate) | Services revenue (period) | Total revenue (period) | Gross profit (period) |
+|---------|-------------------------|-----|----------------|---------------------------|------------------------|------------------------|
+| **3 months** | 20 | $16,000 | $192,000 | ~$18,000 | ~$66,000 | **~$48,000** |
+| **6 months** | 50 | $40,000 | $480,000 | ~$45,000 | ~$285,000 | **~$212,000** |
+| **1 year** | 200 | $160,000 | $1.92M | ~$180,000 | ~$2.1M | **~$1.5M** |
+| **3 years** | 600–800 | $480k–$640k | $5.8M–$7.7M | ~$500k/yr | ~$6.3M–$8.2M/yr | **~$4.5M–$5.8M/yr** |
+| **5 years** | 1,200–1,500+ | $1.0M–$1.2M+ | $12M–$14.4M+ | ~$800k+/yr | ~$13M–$15M+/yr | **~$9M–$11M+/yr** |
+
+*3–6 months: pilot phase and land-and-expand; 1 year: multi-tenant SaaS, channel/OEM; 3–5 years: scale, higher Enterprise mix (ARPU can rise to $900–$1,000), geographic expansion, and platform stickiness.*
+
+**Summary (20 clients as early steady-state):**
+
+| Metric | Value |
+|--------|--------|
+| **20 active clients** (e.g. at 3 months) | MRR $16,000 → ARR $192,000 → **~$48k profit** (quarter) / **~$145k–$150k** (annualized) |
+| **50 clients** (6 months) | MRR $40,000 → ARR $480,000 → **~$212k profit** (half-year) |
+| **200 clients** (1 year) | MRR $160,000 → ARR $1.92M → **~$1.5M gross profit** (year) |
+| **3-year / 5-year** | 600–800 and 1,200–1,500+ clients → **$4.5M–$5.8M** and **$9M–$11M+** gross profit per year |
 
 **Primary industries:**
 
