@@ -74,6 +74,20 @@ Industrial pump fleets (oil & gas, water, chemicals, power, mining) face:
 
 **Client-based revenue & profit (illustrative):**
 
+*Baseline (20 active clients per month — target steady state):*
+
+| Metric | Assumption | Value |
+|--------|------------|--------|
+| **Active clients (target)** | Paying sites/tenants | 20 per month (steady state) |
+| **Blended ARPU** | Mix of Starter / Professional / Enterprise | $800 / client / month |
+| **Monthly recurring revenue (MRR)** | 20 × $800 | **$16,000** |
+| **Annual recurring revenue (ARR)** | MRR × 12 | **$192,000** |
+| **Professional services (one-time, annual)** | ~40% of clients need onboarding/year | ~8 × $3,000 ≈ **$24,000** |
+| **Total annual revenue** | ARR + services | **~$216,000** |
+| **Gross margin (SaaS)** | After infra, support, success | ~70% |
+| **Annual gross profit (SaaS)** | ARR × 70% | **~$134,400** |
+| **Annual gross profit (total)** | SaaS profit + services margin (~50%) | **~$146,400** |
+
 **Base assumptions:** Blended ARPU **$800 / client / month** (Starter / Professional / Enterprise mix). Gross margin ~70% (SaaS), services margin ~50%. Professional services ~$3,000 per onboarding.
 
 **Growth roadmap — clients, revenue & profit by horizon:**
