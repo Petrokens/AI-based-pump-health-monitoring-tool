@@ -21,7 +21,7 @@ const normalizeApiBaseUrl = (url) => {
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (import.meta.env.PROD) {
-    return normalizeApiBaseUrl(envUrl || 'https://t1s9kxj1-5000.inc1.devtunnels.ms');
+    return normalizeApiBaseUrl(envUrl || 'https://ai-based-pump-health-monitoring-tool.onrender.com');
   }
   return normalizeApiBaseUrl(envUrl || '/api');
 };
