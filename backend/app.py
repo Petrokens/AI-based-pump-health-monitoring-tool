@@ -929,6 +929,162 @@ def health_check():
         "total_records": len(operation_log_df)
     })
 
+
+# ==================== Setup / Upload endpoints ====================
+
+OPERATION_LOG_LOCK = threading.Lock()
+MAINTENANCE_LOG_LOCK = threading.Lock()
+
+
+def _read_uploaded_table(file_storage):
+    """Read Excel (.xlsx) or CSV file into a DataFrame."""
+    fn = (file_storage.filename or "").lower()
+    if fn.endswith(".csv"):
+        df = pd.read_csv(file_storage.stream)
+    elif fn.endswith(".xlsx"):
+        df = pd.read_excel(file_storage.stream, engine="openpyxl")
+    else:
+        raise ValueError("File must be .csv or .xlsx")
+    df.columns = df.columns.str.strip()
+    return df
+
+
+PUMP_MASTER_COLS = [
+    "pump_id", "pump_type", "pump_type_detail", "manufacturer", "model", "installation_date",
+    "rated_power_kw", "rated_flow_m3h", "rated_head_m", "flow_range_min_m3h", "flow_range_max_m3h",
+    "head_range_min_m", "head_range_max_m", "rated_rpm", "seal_type", "bearing_type_de", "bearing_type_nde",
+    "impeller_type", "location", "criticality_level", "serial_number", "warranty_expiry", "last_overhaul",
+    "min_safe_flow_m3h", "max_safe_flow_m3h", "max_motor_load_kw", "max_suction_pressure_bar",
+    "efficiency_bep_percent", "npshr_m", "health_score",
+]
+
+
+@app.route('/api/setup/pump-master', methods=['OPTIONS', 'POST'])
+def setup_pump_master():
+    """Append one pump master row from JSON body (all pump_master.csv columns)."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    global pump_master_df, PUMP_MASTER_MTIME
+    try:
+        data = request.get_json() or {}
+        if not data.get("pump_id"):
+            return api_error("pump_id is required", 400)
+        row = {c: data.get(c) for c in PUMP_MASTER_COLS}
+        new_row_df = pd.DataFrame([row], columns=PUMP_MASTER_COLS)
+        with PUMP_MASTER_LOCK:
+            pump_master_df = pd.concat([pump_master_df, new_row_df], ignore_index=True)
+            pump_master_df.to_csv(PUMP_MASTER_PATH, index=False)
+            PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
+        with PUMP_CACHE_LOCK:
+            PUMP_LIST_CACHE["data"] = None
+            PUMP_LIST_CACHE["timestamp"] = datetime.min
+        return jsonify({"ok": True, "pump_id": str(row["pump_id"])})
+    except Exception as e:
+        logger.exception("pump-master setup failed")
+        return api_error(str(e), 500)
+
+
+@app.route('/api/setup/pump-master/upload', methods=['OPTIONS', 'POST'])
+def setup_pump_master_upload():
+    """Append first row from uploaded pump_master CSV/Excel; return that row for frontend form."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    global pump_master_df, PUMP_MASTER_MTIME
+    try:
+        f = request.files.get("file")
+        if not f:
+            return api_error("No file uploaded. Use form field 'file'.", 400)
+        df = _read_uploaded_table(f)
+        df.columns = df.columns.str.strip()
+        missing = [c for c in PUMP_MASTER_COLS if c not in df.columns]
+        if missing:
+            return api_error(f"Missing columns: {missing}. Expected: pump_id, pump_type, ...", 400)
+        row_raw = df.iloc[0].to_dict()
+        row = {}
+        for c in PUMP_MASTER_COLS:
+            v = row_raw.get(c)
+            if pd.isna(v) or v is None:
+                row[c] = None
+            else:
+                row[c] = convert_to_python_type(v)
+        if not row.get("pump_id"):
+            return api_error("First row must have pump_id.", 400)
+        new_row_df = pd.DataFrame([row], columns=PUMP_MASTER_COLS)
+        with PUMP_MASTER_LOCK:
+            pump_master_df = pd.concat([pump_master_df, new_row_df], ignore_index=True)
+            pump_master_df.to_csv(PUMP_MASTER_PATH, index=False)
+            PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
+        with PUMP_CACHE_LOCK:
+            PUMP_LIST_CACHE["data"] = None
+            PUMP_LIST_CACHE["timestamp"] = datetime.min
+        return jsonify({"ok": True, "pump_id": str(row["pump_id"]), "row": row})
+    except ValueError as e:
+        return api_error(str(e), 400)
+    except Exception as e:
+        logger.exception("pump-master upload failed")
+        return api_error(str(e), 500)
+
+
+@app.route('/api/setup/operation-log', methods=['OPTIONS', 'POST'])
+def setup_operation_log():
+    """Replace operation log with uploaded Excel or CSV. Columns: timestamp, pump_id, flow_m3h, discharge_pressure_bar, suction_pressure_bar, rpm, motor_power_kw, vibration_mm_s, bearing_temp_c, displacement_um, status."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    global operation_log_df
+    try:
+        f = request.files.get("file")
+        if not f:
+            return api_error("No file uploaded. Use form field 'file'.", 400)
+        df = _read_uploaded_table(f)
+        df.columns = df.columns.str.strip()
+        required = ["timestamp", "pump_id", "flow_m3h", "discharge_pressure_bar", "suction_pressure_bar", "rpm", "motor_power_kw", "vibration_mm_s", "bearing_temp_c", "displacement_um", "status"]
+        missing = [c for c in required if c not in df.columns]
+        if missing:
+            return api_error(f"Missing columns: {missing}. Expected: {required}", 400)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        for col in ["flow_m3h", "discharge_pressure_bar", "suction_pressure_bar", "rpm", "motor_power_kw", "vibration_mm_s", "bearing_temp_c", "displacement_um"]:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float32")
+        df = df.sort_values("timestamp").reset_index(drop=True)
+        with OPERATION_LOG_LOCK:
+            operation_log_df = df
+        return jsonify({"ok": True, "rows": len(df), "pump_ids": df["pump_id"].unique().tolist()})
+    except ValueError as e:
+        return api_error(str(e), 400)
+    except Exception as e:
+        logger.exception("operation-log upload failed")
+        return api_error(str(e), 500)
+
+
+@app.route('/api/setup/maintenance-log', methods=['OPTIONS', 'POST'])
+def setup_maintenance_log():
+    """Replace maintenance log with uploaded Excel or CSV. Columns: date, pump_id, action, component, notes, downtime_hours."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    global maintenance_log_df
+    try:
+        f = request.files.get("file")
+        if not f:
+            return api_error("No file uploaded. Use form field 'file'.", 400)
+        df = _read_uploaded_table(f)
+        df.columns = df.columns.str.strip()
+        required = ["date", "pump_id", "action", "component", "notes", "downtime_hours"]
+        missing = [c for c in required if c not in df.columns]
+        if missing:
+            return api_error(f"Missing columns: {missing}. Expected: {required}", 400)
+        df["date"] = pd.to_datetime(df["date"])
+        if "downtime_hours" in df.columns:
+            df["downtime_hours"] = pd.to_numeric(df["downtime_hours"], errors="coerce")
+        with MAINTENANCE_LOG_LOCK:
+            maintenance_log_df = df
+        return jsonify({"ok": True, "rows": len(df)})
+    except ValueError as e:
+        return api_error(str(e), 400)
+    except Exception as e:
+        logger.exception("maintenance-log upload failed")
+        return api_error(str(e), 500)
+
+
 @app.route('/api/pumps', methods=['GET'])
 def get_pumps():
     """Get list of all pumps with real-time analysis"""
@@ -986,7 +1142,7 @@ def get_pumps():
                 "rul_hours": int(convert_to_python_type(rul) or 500),
                 "location": "Pump House - Unit 1",
                 "model": str(pump_row.get('model', 'Unknown')),
-                "vendor": str(pump_row.get('vendor', 'Unknown')),
+                "vendor": str(pump_row.get('vendor') or pump_row.get('manufacturer', 'Unknown')),
                 "rated_flow": rated_flow_val,
                 "ai_confidence": float(round(convert_to_python_type(anomaly_result.get('confidence', 0)) * 100, 1))
             })
