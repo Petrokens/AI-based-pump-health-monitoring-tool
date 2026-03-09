@@ -24,10 +24,184 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { fetchPumps } from './services/api';
 
 import LandingPage from './components/LandingPage';
+import PumpSelectionFlow from './components/setup/PumpSelectionFlow';
 
 const VALID_VIEWS = ['dashboard', 'analytics', 'insights', 'trends', 'alerts', 'reports', 'settings'];
 function viewOrDashboard(view) {
   return VALID_VIEWS.includes(view) ? view : 'dashboard';
+}
+
+function SelectPumpLayout({ setPumps, setSelectedPump, pumps }) {
+  const navigate = useNavigate();
+
+  const handlePumpSetupComplete = (payload) => {
+    const id = payload.pump_id || payload.pumpId || 'P-101A';
+    const newPump = {
+      id,
+      name: payload.model ? `${payload.model} - ${id}` : `${payload.pumpType || 'Pump'} - ${id}`,
+      status: 'normal',
+      health_index: 85,
+      rul_hours: 500,
+      location: 'Pump House - Unit 1',
+      model: payload.model || 'Custom',
+      vendor: payload.manufacturer || 'Unknown',
+      rated_flow: payload.flow ?? 150,
+      ai_confidence: 90,
+    };
+    setPumps((prev) => [newPump, ...(prev || [])]);
+    setSelectedPump(id);
+    navigate('/app/dashboard');
+  };
+
+  return (
+    <div className="flex h-screen bg-[var(--bg-primary)]">
+      <Sidebar selectedView="select-pump" onViewChange={(id) => navigate(`/app/${id}`)} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-[var(--bg-header)] border-b border-[var(--border-color)] px-6 py-4">
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">Pump Selection & Setup</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+            Select category, type, and enter pump data to open the predictive maintenance dashboard.
+          </p>
+        </header>
+        <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
+          <PumpSelectionFlow onSubmit={handlePumpSetupComplete} />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function MainAppLayout({
+  pumps,
+  selectedPump,
+  setSelectedPump,
+  loadPumps,
+  loading,
+  error,
+  lastUpdate,
+}) {
+  const { view } = useParams();
+  const navigate = useNavigate();
+  const selectedView = viewOrDashboard(view);
+  const currentPump = pumps.find((p) => p.id === selectedPump);
+
+  // Redirect invalid view param to dashboard (shareable URLs stay valid)
+  React.useEffect(() => {
+    if (view && !VALID_VIEWS.includes(view)) {
+      navigate('/app/dashboard', { replace: true });
+    }
+  }, [view, navigate]);
+
+  const handleViewChange = (id) => navigate(`/app/${id}`);
+
+  // If dashboard has no pumps, send user to pump selection first
+  React.useEffect(() => {
+    if (selectedView === 'dashboard' && pumps.length === 0) {
+      navigate('/app/select-pump', { replace: true });
+    }
+  }, [selectedView, pumps.length, navigate]);
+
+  return (
+    <div className="flex h-screen bg-[var(--bg-primary)]">
+      <Sidebar selectedView={selectedView} onViewChange={handleViewChange} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header
+          selectedPump={selectedPump}
+          onPumpChange={setSelectedPump}
+          pumps={pumps}
+          lastUpdate={lastUpdate}
+          currentPumpStatus={currentPump?.status}
+        />
+
+        <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-4" aria-hidden />
+              <p className="text-[var(--text-secondary)]">Loading pump data...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
+                <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
+                <p className="text-[var(--text-secondary)] mb-4">{error}</p>
+                <button
+                  onClick={loadPumps}
+                  className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Retry Connection
+                </button>
+              </div>
+            </div>
+          ) : pumps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
+                <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
+                <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {selectedView === 'dashboard' && (
+                    <>
+                      <PumpOverview pumpId={selectedPump} />
+                      <SectionToggle title="📊 Demo Simulation: 6 Months in 5 Minutes" subtitle="Time-lapse playback of 6 months operational data" defaultOpen={true}>
+                        <DemoSimulation pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="A. Seal Health" subtitle="Seal failure forecast & risk">
+                        <SealFailureForecast pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="B. Bearing Failure Forecast" subtitle="Health, RUL, and actions">
+                        <BearingFailureForecast pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="C. Cavitation Prediction" subtitle="NPSH vs cavitation risk">
+                        <CavitationPrediction pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="D. Vibration Anomaly Detection" subtitle="FFT + fault identification">
+                        <VibrationAnomalyDetection pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="E. Motor Overloading Prediction" subtitle="Motor draw vs hydraulic load">
+                        <MotorOverloadingPrediction pumpId={selectedPump} />
+                      </SectionToggle>
+                      <SectionToggle title="F. Performance Degradation" subtitle="Curve deviation, efficiency drop">
+                        <PerformanceDegradation pumpId={selectedPump} />
+                      </SectionToggle>
+                    </>
+                  )}
+
+                  {selectedView === 'insights' && (
+                    <>
+                      <MLOutputs pumpId={selectedPump} />
+                      <RootCausePanel pumpId={selectedPump} />
+                      <AIInsights pumpId={selectedPump} expanded={true} />
+                    </>
+                  )}
+
+                  {selectedView === 'trends' && (
+                    <TrendExplorer pumpId={selectedPump} expanded={true} />
+                  )}
+
+                  {selectedView === 'analytics' && (
+                    <AnalyticsDashboard pumpId={selectedPump} />
+                  )}
+
+                  {selectedView === 'alerts' && (
+                    <AlertsWorkflow pumpId={selectedPump} />
+                  )}
+
+                  {selectedView === 'reports' && (
+                    <ReportsKPIs pumpId={selectedPump} />
+                  )}
+
+                  {selectedView === 'settings' && (
+                    <Settings />
+                  )}
+                </>
+              )}
+            </main>
+          </div>
+        </div>
+  );
 }
 
 function App() {
@@ -149,7 +323,7 @@ function App() {
       <LandingPage
         onLogin={() => {
           setIsLoggedIn(true);
-          navigate('/app/dashboard');
+          navigate('/app/select-pump');
         }}
       />
     );
@@ -159,8 +333,18 @@ function App() {
     <ThemeProvider>
       <DemoProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/app/select-pump" replace />} />
+          <Route path="/app" element={<Navigate to="/app/select-pump" replace />} />
+          <Route
+            path="/app/select-pump"
+            element={
+              <SelectPumpLayout
+                setPumps={setPumps}
+                setSelectedPump={setSelectedPump}
+                pumps={pumps}
+              />
+            }
+          />
           <Route
             path="/app/:view"
             element={
@@ -175,136 +359,10 @@ function App() {
               />
             }
           />
-          <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/app/select-pump" replace />} />
         </Routes>
       </DemoProvider>
     </ThemeProvider>
-  );
-}
-
-function MainAppLayout({
-  pumps,
-  selectedPump,
-  setSelectedPump,
-  loadPumps,
-  loading,
-  error,
-  lastUpdate,
-}) {
-  const { view } = useParams();
-  const navigate = useNavigate();
-  const selectedView = viewOrDashboard(view);
-  const currentPump = pumps.find((p) => p.id === selectedPump);
-
-  // Redirect invalid view param to dashboard (shareable URLs stay valid)
-  React.useEffect(() => {
-    if (view && !VALID_VIEWS.includes(view)) {
-      navigate('/app/dashboard', { replace: true });
-    }
-  }, [view, navigate]);
-
-  const handleViewChange = (id) => navigate(`/app/${id}`);
-
-  return (
-    <div className="flex h-screen bg-[var(--bg-primary)]">
-      <Sidebar selectedView={selectedView} onViewChange={handleViewChange} />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          selectedPump={selectedPump}
-          onPumpChange={setSelectedPump}
-          pumps={pumps}
-          lastUpdate={lastUpdate}
-          currentPumpStatus={currentPump?.status}
-        />
-
-        <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500 mb-4" aria-hidden />
-              <p className="text-[var(--text-secondary)]">Loading pump data...</p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
-                <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
-                <p className="text-[var(--text-secondary)] mb-4">{error}</p>
-                <button
-                  onClick={loadPumps}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Retry Connection
-                </button>
-              </div>
-            </div>
-          ) : pumps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
-                <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
-                <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {selectedView === 'dashboard' && (
-                    <>
-                      <PumpOverview pumpId={selectedPump} />
-                      <SectionToggle title="📊 Demo Simulation: 6 Months in 5 Minutes" subtitle="Time-lapse playback of 6 months operational data" defaultOpen={true}>
-                        <DemoSimulation pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="A. Seal Health" subtitle="Seal failure forecast & risk">
-                        <SealFailureForecast pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="B. Bearing Failure Forecast" subtitle="Health, RUL, and actions">
-                        <BearingFailureForecast pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="C. Cavitation Prediction" subtitle="NPSH vs cavitation risk">
-                        <CavitationPrediction pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="D. Vibration Anomaly Detection" subtitle="FFT + fault identification">
-                        <VibrationAnomalyDetection pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="E. Motor Overloading Prediction" subtitle="Motor draw vs hydraulic load">
-                        <MotorOverloadingPrediction pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="F. Performance Degradation" subtitle="Curve deviation, efficiency drop">
-                        <PerformanceDegradation pumpId={selectedPump} />
-                      </SectionToggle>
-                    </>
-                  )}
-
-                  {selectedView === 'insights' && (
-                    <>
-                      <MLOutputs pumpId={selectedPump} />
-                      <RootCausePanel pumpId={selectedPump} />
-                      <AIInsights pumpId={selectedPump} expanded={true} />
-                    </>
-                  )}
-
-                  {selectedView === 'trends' && (
-                    <TrendExplorer pumpId={selectedPump} expanded={true} />
-                  )}
-
-                  {selectedView === 'analytics' && (
-                    <AnalyticsDashboard pumpId={selectedPump} />
-                  )}
-
-                  {selectedView === 'alerts' && (
-                    <AlertsWorkflow pumpId={selectedPump} />
-                  )}
-
-                  {selectedView === 'reports' && (
-                    <ReportsKPIs pumpId={selectedPump} />
-                  )}
-
-                  {selectedView === 'settings' && (
-                    <Settings />
-                  )}
-                </>
-              )}
-            </main>
-          </div>
-        </div>
   );
 }
 

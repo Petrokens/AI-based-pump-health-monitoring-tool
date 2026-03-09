@@ -221,5 +221,35 @@ export const fetchDemoSimulation = async (pumpId) => {
   return response.data;
 };
 
+/** Setup: append one pump to pump_master (JSON body with all pump_master.csv columns). */
+export const uploadPumpMaster = async (payload) => {
+  const response = await api.post('/setup/pump-master', payload);
+  return response.data;
+};
+
+/** Setup: append first row from uploaded pump_master CSV/Excel; returns { ok, pump_id, row }. */
+export const uploadPumpMasterFile = async (file) => {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api.post('/setup/pump-master/upload', form);
+  return response.data;
+};
+
+/** Setup: replace operation log with uploaded Excel/CSV (form field: file). */
+export const uploadOperationLog = async (file) => {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api.post('/setup/operation-log', form);
+  return response.data;
+};
+
+/** Setup: replace maintenance log with uploaded Excel/CSV (form field: file). */
+export const uploadMaintenanceLog = async (file) => {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api.post('/setup/maintenance-log', form);
+  return response.data;
+};
+
 
 
