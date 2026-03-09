@@ -17,7 +17,6 @@ import VibrationAnomalyDetection from './components/monitoring/VibrationAnomalyD
 import MotorOverloadingPrediction from './components/monitoring/MotorOverloadingPrediction';
 import PerformanceDegradation from './components/monitoring/PerformanceDegradation';
 import AnalyticsDashboard from './components/analytics/AnalyticsDashboard';
-import DemoSimulation from './components/demo/DemoSimulation';
 import { DemoProvider } from './contexts/DemoContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -145,9 +144,6 @@ function MainAppLayout({
               {selectedView === 'dashboard' && (
                     <>
                       <PumpOverview pumpId={selectedPump} />
-                      <SectionToggle title="📊 Demo Simulation: 6 Months in 5 Minutes" subtitle="Time-lapse playback of 6 months operational data" defaultOpen={true}>
-                        <DemoSimulation pumpId={selectedPump} />
-                      </SectionToggle>
                       <SectionToggle title="A. Seal Health" subtitle="Seal failure forecast & risk">
                         <SealFailureForecast pumpId={selectedPump} />
                       </SectionToggle>

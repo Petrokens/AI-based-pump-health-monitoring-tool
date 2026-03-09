@@ -20,10 +20,8 @@ const normalizeApiBaseUrl = (url) => {
 
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (import.meta.env.PROD) {
-    return normalizeApiBaseUrl(envUrl || 'https://ai-based-pump-health-monitoring-tool.onrender.com');
-  }
-  return normalizeApiBaseUrl(envUrl || '/api');
+  // Default to local backend; set VITE_API_BASE_URL to override (e.g. Render URL)
+  return normalizeApiBaseUrl(envUrl || 'http://127.0.0.1:5000');
 };
 
 // Check localStorage for custom API URL (from Settings)
@@ -58,6 +56,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// For FormData (file uploads), do not set Content-Type so the browser sets multipart/form-data with boundary
+api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+  return config;
 });
 
 // Function to update API base URL dynamically (for Settings page)
