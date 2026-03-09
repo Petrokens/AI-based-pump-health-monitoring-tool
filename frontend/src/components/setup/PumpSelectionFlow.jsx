@@ -77,7 +77,8 @@ export default function PumpSelectionFlow({ onSubmit }) {
       setMasterDataFromUpload(true);
       setMasterFile(file);
     } catch (err) {
-      setUploadError(err.response?.data?.error || err.message || 'Upload failed');
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Upload failed';
+      setUploadError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setMasterUploading(false);
     }

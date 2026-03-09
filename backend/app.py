@@ -984,6 +984,25 @@ def setup_pump_master():
         return api_error(str(e), 500)
 
 
+def _normalize_df_columns_to_master(df):
+    """Map dataframe columns to PUMP_MASTER_COLS (strip, case-insensitive match). Returns (df, missing_list)."""
+    df = df.copy()
+    df.columns = [str(c).strip() for c in df.columns]
+    col_map = {}
+    available_lower = {str(c).strip().lower(): c for c in df.columns}
+    missing = []
+    for expected in PUMP_MASTER_COLS:
+        key = expected.lower()
+        if key in available_lower:
+            col_map[available_lower[key]] = expected
+        else:
+            missing.append(expected)
+    if missing:
+        return None, missing
+    df = df.rename(columns=col_map)
+    return df[PUMP_MASTER_COLS], []
+
+
 @app.route('/api/setup/pump-master/upload', methods=['OPTIONS', 'POST'])
 def setup_pump_master_upload():
     """Append first row from uploaded pump_master CSV/Excel; return that row for frontend form."""
@@ -993,13 +1012,22 @@ def setup_pump_master_upload():
     try:
         f = request.files.get("file")
         if not f:
-            return api_error("No file uploaded. Use form field 'file'.", 400)
+            keys = list(request.files.keys()) if request.files else []
+            return api_error(
+                f"No file uploaded. Use form field 'file'. (Received keys: {keys})",
+                400,
+            )
         df = _read_uploaded_table(f)
-        df.columns = df.columns.str.strip()
-        missing = [c for c in PUMP_MASTER_COLS if c not in df.columns]
-        if missing:
-            return api_error(f"Missing columns: {missing}. Expected: pump_id, pump_type, ...", 400)
-        row_raw = df.iloc[0].to_dict()
+        df.columns = [str(c).strip() for c in df.columns]
+        df_normalized, missing = _normalize_df_columns_to_master(df)
+        if df_normalized is None:
+            return api_error(
+                f"Missing columns: {missing}. File must include: pump_id, pump_type, pump_type_detail, manufacturer, model, ...",
+                400,
+            )
+        if len(df_normalized) == 0:
+            return api_error("File has no data rows. Need at least one row after the header.", 400)
+        row_raw = df_normalized.iloc[0].to_dict()
         row = {}
         for c in PUMP_MASTER_COLS:
             v = row_raw.get(c)

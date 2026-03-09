@@ -93,8 +93,8 @@ api.interceptors.response.use(
           console.warn('Network error: Backend may be sleeping (Render free tier) or unreachable. Retrying...');
         }
       } else if (error.response) {
-        // Server responded with error status
-        console.error('Response error:', error.response.status, error.response.data);
+        const msg = error.response.data?.error || error.response.data?.message || JSON.stringify(error.response.data);
+        console.error('Response error:', error.response.status, msg);
       } else if (error.request) {
         // Request made but no response
         if (consecutiveErrors === 1) {
@@ -230,7 +230,8 @@ export const uploadPumpMaster = async (payload) => {
 /** Setup: append first row from uploaded pump_master CSV/Excel; returns { ok, pump_id, row }. */
 export const uploadPumpMasterFile = async (file) => {
   const form = new FormData();
-  form.append('file', file);
+  const fileName = file.name || (file.type === 'text/csv' ? 'pump_master.csv' : 'pump_master.xlsx');
+  form.append('file', file, fileName);
   const response = await api.post('/setup/pump-master/upload', form);
   return response.data;
 };
