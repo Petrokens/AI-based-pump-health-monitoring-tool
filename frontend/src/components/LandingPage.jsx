@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
-    Activity, Brain, ShieldCheck, TrendingUp, BarChart2, Lock,
+    Activity, Brain, ShieldCheck, TrendingUp, BarChart2,
     ArrowRight, X, Zap, Server, Database, Layers,
     Globe, Cpu, Clock, AlertTriangle, Check, ChevronDown,
     Play, Users, MessageSquare, ChevronRight, Menu
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
-const LandingPage = ({ onLogin }) => {
-    const [showLogin, setShowLogin] = useState(false);
+const LandingPage = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeTab, setActiveTab] = useState('monitor');
     const [openFaq, setOpenFaq] = useState(null);
@@ -40,18 +40,18 @@ const LandingPage = ({ onLogin }) => {
                     </nav>
 
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setShowLogin(true)}
+                        <Link
+                            to="/login"
                             className="px-6 py-2.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-primary-500/50 hover:bg-[var(--bg-hover)] transition-all duration-300 text-sm font-medium"
                         >
                             Sign In
-                        </button>
-                        <button
-                            onClick={() => setShowLogin(true)}
+                        </Link>
+                        <Link
+                            to="/demo"
                             className="hidden sm:flex px-6 py-2.5 rounded-full bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-500/25 transition-all duration-300 text-sm font-medium"
                         >
-                            Get Started
-                        </button>
+                            Get Demo Now
+                        </Link>
                     </div>
                 </div>
             </header>
@@ -80,17 +80,20 @@ const LandingPage = ({ onLogin }) => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <button
-                            onClick={() => setShowLogin(true)}
+                        <Link
+                            to="/login"
                             className="group w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black hover:bg-gray-100 font-bold shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                         >
                             Launch Live Simulation
                             <Play className="w-5 h-5 fill-black" />
-                        </button>
-                        <button className="w-full sm:w-auto px-8 py-4 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-all duration-300 font-semibold flex items-center justify-center gap-2">
-                            Request Demo
+                        </Link>
+                        <Link
+                            to="/demo"
+                            className="group w-full sm:w-auto px-8 py-4 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] transition-all duration-300 font-semibold flex items-center justify-center gap-2"
+                        >
+                            Get Demo Now — Try it free for 30 days
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
@@ -433,12 +436,12 @@ const LandingPage = ({ onLogin }) => {
                     <div className="relative z-10">
                         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to eliminate downtime?</h2>
                         <p className="text-blue-100 text-xl mb-10 max-w-2xl mx-auto">Join industry leaders using ANKANI to protect their critical assets.</p>
-                        <button
-                            onClick={() => setShowLogin(true)}
-                            className="bg-white text-primary-900 px-10 py-5 rounded-full font-bold text-lg hover:bg-blue-50 transition-colors shadow-2xl"
+                        <Link
+                            to="/demo"
+                            className="bg-white text-primary-900 px-10 py-5 rounded-full font-bold text-lg hover:bg-blue-50 transition-colors shadow-2xl inline-block"
                         >
-                            Get Access Now
-                        </button>
+                            Get Demo Now — Try it free for 30 days
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -506,10 +509,6 @@ const LandingPage = ({ onLogin }) => {
                 </div>
             </footer>
 
-            {/* Login Modal */}
-            {showLogin && (
-                <LoginModal onClose={() => setShowLogin(false)} onLogin={onLogin} />
-            )}
         </div>
     );
 };
@@ -570,87 +569,5 @@ const FaqItem = ({ question, answer, isOpen, onClick }) => (
         )}
     </div>
 );
-
-const LoginModal = ({ onClose, onLogin }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-
-    const handleLogin = (e) => {
-        e.preventDefault();
-        if (username === 'admin' && password === 'demo123') {
-            onLogin();
-        } else {
-            setError('Invalid credentials. Try admin / demo123');
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl shadow-2xl p-8 relative animate-scale-up">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] transition-colors"
-                >
-                    <X className="w-5 h-5" />
-                </button>
-
-                <div className="mb-8 text-center">
-                    <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary-500/10 flex items-center justify-center">
-                        <Lock className="w-6 h-6 text-primary-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-2">Welcome Back</h3>
-                    <p className="text-[var(--text-secondary)]">Enter your credentials to access the dashboard</p>
-                </div>
-
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-all"
-                            placeholder="admin"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-all"
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    {error && (
-                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
-                            <X className="w-4 h-4" />
-                            {error}
-                        </div>
-                    )}
-
-                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-700 text-sm">
-                        <p className="font-semibold mb-1 flex items-center gap-2">
-                            <Zap className="w-4 h-4" /> Demo Credentials:
-                        </p>
-                        <p>Username: <span className="font-mono text-[var(--text-primary)]">admin</span></p>
-                        <p>Password: <span className="font-mono text-[var(--text-primary)]">demo123</span></p>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full py-3 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-semibold shadow-lg shadow-primary-500/25 transition-all duration-300"
-                    >
-                        Sign In
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-};
 
 export default LandingPage;

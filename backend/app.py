@@ -3,6 +3,13 @@ Flask Backend for Pump Predictive Maintenance Dashboard
 Uses REAL CSV data with AI/ML algorithms for predictive analysis
 """
 
+# Load .env so MONGODB_URI is available (optional)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime, timedelta
@@ -17,6 +24,24 @@ from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
+
+# MongoDB (auth & admin)
+from db_mongo import (
+    get_db,
+    auth_login,
+    auth_register_demo,
+    admin_get_clients,
+    admin_get_client,
+    admin_get_demo_entries,
+    pumps_list_by_client,
+    pump_create,
+    pumps_count_by_client,
+    plans_list,
+    plan_by_id,
+    plan_create as db_plan_create,
+    plan_update as db_plan_update,
+    client_update_plan,
+)
 
 # Structured logging for production
 logging.basicConfig(
@@ -920,14 +945,173 @@ def handle_options(path):
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    mongo_status = "connected" if get_db() else "disconnected"
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "data_source": "Real CSV files",
         "ai_models": "Trained (Isolation Forest)",
         "pumps_loaded": len(operation_log_df['pump_id'].unique()),
-        "total_records": len(operation_log_df)
+        "total_records": len(operation_log_df),
+        "mongodb": mongo_status,
     })
+
+
+# ==================== Auth & Admin (MongoDB) ====================
+
+@app.route('/api/auth/login', methods=['OPTIONS', 'POST'])
+def api_auth_login():
+    """POST body: { email, password }. Returns { ok, role, user } or { error }."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    data = request.get_json() or {}
+    email = (data.get("email") or "").strip()
+    password = data.get("password") or ""
+    if not email or not password:
+        return api_error("Email and password are required", 400)
+    user = auth_login(email, password)
+    if not user:
+        return api_error("Invalid email or password", 401)
+    return jsonify({
+        "ok": True,
+        "role": user.get("role", "client"),
+        "user": {
+            "email": user.get("email"),
+            "name": user.get("name"),
+            "role": user.get("role"),
+            "clientId": user.get("clientId"),
+        },
+    })
+
+
+@app.route('/api/auth/register-demo', methods=['OPTIONS', 'POST'])
+def api_auth_register_demo():
+    """POST body: { name, companyName, email, password, numberOfPumps?, phone? }. Returns { ok, user, clientId?, demoId? }."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    data = request.get_json() or {}
+    result = auth_register_demo(
+        name=(data.get("name") or "").strip(),
+        company_name=(data.get("companyName") or "").strip(),
+        email=(data.get("email") or "").strip(),
+        password=data.get("password") or "",
+        number_of_pumps=safe_int(data.get("numberOfPumps"), 0, 0, 100000),
+        phone=(data.get("phone") or "").strip() or None,
+    )
+    if not result.get("ok"):
+        return api_error(result.get("error", "Registration failed"), 400)
+    return jsonify(result)
+
+
+@app.route('/api/admin/clients', methods=['OPTIONS', 'GET'])
+def api_admin_clients():
+    """GET: list all clients (admin). In production, protect with admin auth."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    clients = admin_get_clients()
+    return jsonify({"clients": clients})
+
+
+@app.route('/api/admin/clients/<client_id>', methods=['OPTIONS', 'GET'])
+def api_admin_client_detail(client_id):
+    """GET: one client by id (admin)."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    client = admin_get_client(client_id)
+    if not client:
+        return api_error("Client not found", 404)
+    return jsonify(client)
+
+
+@app.route('/api/admin/clients/<client_id>/pumps', methods=['OPTIONS', 'GET'])
+def api_admin_client_pumps(client_id):
+    """GET: list pumps for a client (admin)."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    client = admin_get_client(client_id)
+    if not client:
+        return api_error("Client not found", 404)
+    pumps = pumps_list_by_client(client_id)
+    return jsonify({"pumps": pumps, "clientId": client_id})
+
+
+@app.route('/api/admin/demo-entries', methods=['OPTIONS', 'GET'])
+def api_admin_demo_entries():
+    """GET: list all demo entries (admin)."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    entries = admin_get_demo_entries()
+    return jsonify({"demoEntries": entries})
+
+
+# ---------- Plans (admin + client) ----------
+
+@app.route('/api/plans', methods=['GET'])
+def api_plans():
+    """GET: list active plans (for client plan page)."""
+    plans = plans_list(active_only=True)
+    return jsonify({"plans": plans})
+
+
+@app.route('/api/admin/plans', methods=['OPTIONS', 'GET'])
+def api_admin_plans_list():
+    """GET: list all plans (admin)."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    plans = plans_list(active_only=False)
+    return jsonify({"plans": plans})
+
+
+@app.route('/api/admin/plans', methods=['POST'])
+def api_admin_plans_create():
+    """POST: create a plan (admin). Body: name, description?, price?, priceMonthly?, priceYearly?, pumpsLimit?, billing?, isActive?, order?."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    data = request.get_json(silent=True) or {}
+    result = db_plan_create(data)
+    if not result.get("ok"):
+        return api_error(result.get("error", "Failed to create plan"), 400)
+    return jsonify(result["plan"]), 201
+
+
+@app.route('/api/admin/plans/<plan_id>', methods=['OPTIONS', 'PUT'])
+def api_admin_plans_update(plan_id):
+    """PUT: update a plan (admin)."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    data = request.get_json(silent=True) or {}
+    result = db_plan_update(plan_id, data)
+    if not result.get("ok"):
+        return api_error(result.get("error", "Plan not found"), 404)
+    return jsonify(result["plan"])
+
+
+@app.route('/api/me/plan', methods=['OPTIONS', 'PATCH'])
+def api_me_plan():
+    """PATCH: set current client's plan. Header X-Client-Id. Body: { planName } or { planId }."""
+    if request.method == 'OPTIONS':
+        return jsonify({})
+    client_id = request.headers.get("X-Client-Id", "").strip()
+    if not client_id:
+        return api_error("X-Client-Id required", 400)
+    data = request.get_json(silent=True) or {}
+    plan_name = data.get("planName") or data.get("plan")
+    plan_id = data.get("planId")
+    if plan_name:
+        name = str(plan_name).strip()
+    elif plan_id:
+        plan = plan_by_id(str(plan_id))
+        if not plan:
+            return api_error("Plan not found", 404)
+        name = plan.get("name", "")
+    else:
+        return api_error("Provide planName or planId", 400)
+    if not name:
+        return api_error("Plan name is required", 400)
+    result = client_update_plan(client_id, name)
+    if not result.get("ok"):
+        return api_error(result.get("error", "Update failed"), 400)
+    return jsonify({"ok": True, "plan": name})
 
 
 # ==================== Setup / Upload endpoints ====================
@@ -1115,55 +1299,65 @@ def setup_maintenance_log():
 
 @app.route('/api/pumps', methods=['GET'])
 def get_pumps():
-    """Get list of all pumps with real-time analysis"""
+    """Get list of pumps. If X-Client-Id header is set, return that client's pumps from DB (per-client). Otherwise legacy: all pumps from CSV."""
+    client_id = request.headers.get("X-Client-Id", "").strip()
+    if client_id:
+        # Per-client: return pumps from MongoDB only (other clients' data not visible)
+        db_pumps = pumps_list_by_client(client_id)
+        pump_list = []
+        for p in db_pumps:
+            pump_id = p.get("id") or p.get("pump_id", "")
+            model = p.get("model") or "Custom"
+            name = p.get("name") or f"{model} - {pump_id}"
+            pump_list.append({
+                "id": str(pump_id),
+                "name": name,
+                "status": p.get("status", "normal"),
+                "health_index": float(p.get("health_index", 85.0)),
+                "rul_hours": int(p.get("rul_hours", 500)),
+                "location": p.get("location", "Pump House - Unit 1"),
+                "model": str(model),
+                "vendor": str(p.get("vendor") or p.get("manufacturer", "Unknown")),
+                "rated_flow": float(p.get("rated_flow", 150)),
+                "ai_confidence": float(p.get("ai_confidence", 90)),
+                "categoryLabel": p.get("categoryLabel"),
+                "pumpType": p.get("pumpType"),
+                "createdAt": p.get("createdAt"),
+            })
+        return jsonify(pump_list)
+
+    # Legacy: no client – use CSV/cache (e.g. demo without auth)
     now = datetime.now()
     start_time = now
-
-    # Serve from cache if fresh to avoid repeated heavy computation
     with PUMP_CACHE_LOCK:
         cache_age = (now - PUMP_LIST_CACHE["timestamp"]).total_seconds()
         if PUMP_LIST_CACHE["data"] is not None and cache_age < PUMP_CACHE_TTL_SECONDS:
             return jsonify(PUMP_LIST_CACHE["data"])
 
     pump_list = []
-    
     for _, pump_row in pump_master_df.iterrows():
-        # Abort early if the request is running too long to avoid frontend timeouts
         if (datetime.now() - start_time).total_seconds() > PUMP_LIST_MAX_SECONDS:
             break
-
         pump_id = pump_row['pump_id']
-        
         try:
-            # Skip pumps that have no operation data
             if pump_id not in operation_log_df['pump_id'].values:
                 continue
-
-            # Get latest real data
             latest_data = RealDataProvider.get_latest_reading(pump_id)
-            
-            # Run AI analysis
             anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
             health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
-            # Use master health score if provided to smooth display/status
             master_health = convert_to_python_type(pump_row.get('health_score'))
             display_health = float(master_health) if master_health is not None else health_index
             rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
-            
-            # Determine status
             if display_health > 80:
                 status = "normal"
             elif display_health > 60:
                 status = "warning"
             else:
                 status = "critical"
-            
-            # Convert numpy types to native Python types for JSON serialization
             rated_flow_val = convert_to_python_type(pump_row.get('rated_flow_m3h', 150))
             rated_flow_val = float(rated_flow_val) if rated_flow_val is not None else 150.0
-            
             pump_list.append({
-                "id": str(pump_id),  # Ensure string
+                "id": str(pump_id),
                 "name": f"{pump_row.get('model', 'Unknown')} - {pump_id}",
                 "status": str(status),
                 "health_index": float(round(convert_to_python_type(display_health) or 85.0, 1)),
@@ -1177,13 +1371,42 @@ def get_pumps():
         except Exception as e:
             logger.exception("Error processing %s: %s", pump_id, e)
             continue
-    
-    # Update cache
     with PUMP_CACHE_LOCK:
         PUMP_LIST_CACHE["data"] = pump_list
         PUMP_LIST_CACHE["timestamp"] = datetime.now()
-
     return jsonify(pump_list)
+
+
+@app.route('/api/pumps', methods=['POST'])
+def api_create_pump():
+    """Create a pump for the client. Requires X-Client-Id header. Free plan = 2 pumps max."""
+    if request.method == "OPTIONS":
+        return jsonify({})
+    client_id = request.headers.get("X-Client-Id", "").strip()
+    if not client_id:
+        return api_error("X-Client-Id header is required", 400)
+    data = request.get_json(silent=True) or {}
+    result = pump_create(client_id, data)
+    if not result.get("ok"):
+        return api_error(result.get("error", "Failed to create pump"), 400)
+    pump = result.get("pump", {})
+    # Return pump in same shape as list item for frontend
+    out = {
+        "id": pump.get("id") or pump.get("pump_id"),
+        "name": pump.get("name") or f"{pump.get('model', 'Custom')} - {pump.get('id', '')}",
+        "status": pump.get("status", "normal"),
+        "health_index": float(pump.get("health_index", 85.0)),
+        "rul_hours": int(pump.get("rul_hours", 500)),
+        "location": pump.get("location", "Pump House - Unit 1"),
+        "model": pump.get("model", "Custom"),
+        "vendor": pump.get("vendor") or pump.get("manufacturer", "Unknown"),
+        "rated_flow": float(pump.get("rated_flow", 150)),
+        "ai_confidence": float(pump.get("ai_confidence", 90)),
+        "categoryLabel": pump.get("categoryLabel"),
+        "pumpType": pump.get("pumpType"),
+        "createdAt": pump.get("createdAt"),
+    }
+    return jsonify(out), 201
 
 
 @app.route('/api/pump/<pump_id>/runtime', methods=['GET'])

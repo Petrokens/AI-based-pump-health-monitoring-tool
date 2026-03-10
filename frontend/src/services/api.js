@@ -40,9 +40,13 @@ const getCustomApiUrl = () => {
   return null;
 };
 
-// Get the final API base URL (custom settings override defaults); always normalize so /api is included
-const customUrl = getCustomApiUrl();
-const API_BASE_URL = (customUrl ? normalizeApiBaseUrl(customUrl) : null) || getApiBaseUrl();
+// Get the final API base URL.
+// In development: use relative '/api' so Vite proxy forwards to backend → no CORS.
+// In production: use VITE_API_BASE_URL or custom settings (e.g. Render URL).
+const isDev = import.meta.env.DEV;
+const customUrl = isDev ? null : getCustomApiUrl();
+const API_BASE_URL = (customUrl ? normalizeApiBaseUrl(customUrl) : null) ||
+  (isDev ? '/api' : getApiBaseUrl());
 
 // Log API URL in development or first load
 if (import.meta.env.DEV || !sessionStorage.getItem('api_url_logged')) {
@@ -112,124 +116,160 @@ api.interceptors.response.use(
   }
 );
 
-export const fetchPumps = async () => {
-  const response = await api.get('/pumps');
+/**
+ * Fetch pumps. If clientId is provided, returns that client's pumps only (from backend DB).
+ * Without clientId (legacy), returns all pumps from backend CSV/cache.
+ * NOTE: Request paths are relative (no leading slash) so that the baseURL path (e.g. `/api`) is always honored.
+ */
+export const fetchPumps = async (clientId = null) => {
+  const config = clientId ? { headers: { 'X-Client-Id': clientId } } : {};
+  const response = await api.get('pumps', config);
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+/**
+ * Create a pump for the client. Requires clientId. Free plan = 2 pumps max.
+ * Payload: categoryId, categoryLabel, pumpType, pump_id, model, manufacturer, etc.
+ */
+export const createPump = async (payload, clientId) => {
+  if (!clientId) throw new Error('clientId is required to create a pump');
+  const response = await api.post('pumps', payload, { headers: { 'X-Client-Id': clientId } });
   return response.data;
 };
 
+/** Admin: fetch pumps for a client (by client id). */
+export const fetchClientPumps = async (clientId) => {
+  const response = await api.get(`admin/clients/${encodeURIComponent(clientId)}/pumps`);
+  return response.data?.pumps ?? [];
+};
+
 export const fetchPumpRealtime = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/realtime`);
+  const response = await api.get(`pump/${pumpId}/realtime`);
   return response.data;
 };
 
 export const fetchPumpKPIs = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/kpis`);
+  const response = await api.get(`pump/${pumpId}/kpis`);
   return response.data;
 };
 
 export const fetchPumpTrends = async (pumpId, hours = 24) => {
-  const response = await api.get(`/pump/${pumpId}/trends?hours=${hours}`);
+  const response = await api.get(`pump/${pumpId}/trends?hours=${hours}`);
   return response.data;
 };
 
 export const fetchPumpAnomalies = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/anomalies`);
+  const response = await api.get(`pump/${pumpId}/anomalies`);
   return response.data;
 };
 
 export const fetchPerformanceCurve = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/performance-curve`);
+  const response = await api.get(`pump/${pumpId}/performance-curve`);
   return response.data;
 };
 
 export const fetchDashboardSummary = async () => {
-  const response = await api.get('/dashboard/summary');
+  const response = await api.get('dashboard/summary');
+  return response.data;
+};
+
+/** Fetch active plans (for client plan page). Returns array of plans. */
+export const fetchPlans = async () => {
+  const response = await api.get('plans');
+  return Array.isArray(response.data?.plans) ? response.data.plans : [];
+};
+
+/** Update current client's plan. Requires clientId. Body: { planName } or { planId }. */
+export const updateMyPlan = async (clientId, payload) => {
+  const response = await api.patch('me/plan', payload, {
+    headers: { 'X-Client-Id': clientId },
+  });
   return response.data;
 };
 
 export const fetchPumpOverview = async (pumpId, at) => {
   const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
-  const response = await api.get(`/pump/${pumpId}/overview${atParam}`);
+  const response = await api.get(`pump/${pumpId}/overview${atParam}`);
   return response.data;
 };
 
 export const fetchVibrationData = async (pumpId, at) => {
   const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
-  const response = await api.get(`/pump/${pumpId}/vibration${atParam}`);
+  const response = await api.get(`pump/${pumpId}/vibration${atParam}`);
   return response.data;
 };
 
 export const fetchThermalData = async (pumpId, at) => {
   const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
-  const response = await api.get(`/pump/${pumpId}/thermal${atParam}`);
+  const response = await api.get(`pump/${pumpId}/thermal${atParam}`);
   return response.data;
 };
 
 export const fetchElectricalData = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/electrical`);
+  const response = await api.get(`pump/${pumpId}/electrical`);
   return response.data;
 };
 
 export const fetchHydraulicData = async (pumpId, at) => {
   const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
-  const response = await api.get(`/pump/${pumpId}/hydraulic${atParam}`);
+  const response = await api.get(`pump/${pumpId}/hydraulic${atParam}`);
   return response.data;
 };
 
 export const fetchMaintenanceMetrics = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/maintenance-metrics`);
+  const response = await api.get(`pump/${pumpId}/maintenance-metrics`);
   return response.data;
 };
 
 export const fetchMLOutputs = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/ml-outputs`);
+  const response = await api.get(`pump/${pumpId}/ml-outputs`);
   return response.data;
 };
 
 export const fetchRootCause = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/root-cause`);
+  const response = await api.get(`pump/${pumpId}/root-cause`);
   return response.data;
 };
 
 export const fetchAlerts = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/alerts`);
+  const response = await api.get(`pump/${pumpId}/alerts`);
   return response.data;
 };
 
 export const fetchReports = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/reports`);
+  const response = await api.get(`pump/${pumpId}/reports`);
   return response.data;
 };
 
 export const fetchTrendSignals = async (pumpId, signals = [], hours = 24) => {
   const signalsParam = signals.length > 0 ? signals.join(',') : '';
-  const response = await api.get(`/pump/${pumpId}/trend-signals?signals=${signalsParam}&hours=${hours}`);
+  const response = await api.get(`pump/${pumpId}/trend-signals?signals=${signalsParam}&hours=${hours}`);
   return response.data;
 };
 
 export const fetchPumpRuntime = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/runtime`);
+  const response = await api.get(`pump/${pumpId}/runtime`);
   return response.data;
 };
 
 export const controlPump = async (pumpId, action) => {
-  const response = await api.post(`/pump/${pumpId}/control`, { action });
+  const response = await api.post(`pump/${pumpId}/control`, { action });
   return response.data;
 };
 
 export const fetchFastForwardData = async (pumpId, speed = 100, windowHours = 6) => {
-  const response = await api.get(`/pump/${pumpId}/fast-forward?speed=${speed}&window_hours=${windowHours}`);
+  const response = await api.get(`pump/${pumpId}/fast-forward?speed=${speed}&window_hours=${windowHours}`);
   return response.data;
 };
 
 export const fetchDemoSimulation = async (pumpId) => {
-  const response = await api.get(`/pump/${pumpId}/demo-simulation`);
+  const response = await api.get(`pump/${pumpId}/demo-simulation`);
   return response.data;
 };
 
 /** Setup: append one pump to pump_master (JSON body with all pump_master.csv columns). */
 export const uploadPumpMaster = async (payload) => {
-  const response = await api.post('/setup/pump-master', payload);
+  const response = await api.post('setup/pump-master', payload);
   return response.data;
 };
 
@@ -238,7 +278,7 @@ export const uploadPumpMasterFile = async (file) => {
   const form = new FormData();
   const fileName = file.name || (file.type === 'text/csv' ? 'pump_master.csv' : 'pump_master.xlsx');
   form.append('file', file, fileName);
-  const response = await api.post('/setup/pump-master/upload', form);
+  const response = await api.post('setup/pump-master/upload', form);
   return response.data;
 };
 
@@ -246,7 +286,7 @@ export const uploadPumpMasterFile = async (file) => {
 export const uploadOperationLog = async (file) => {
   const form = new FormData();
   form.append('file', file);
-  const response = await api.post('/setup/operation-log', form);
+  const response = await api.post('setup/operation-log', form);
   return response.data;
 };
 
@@ -254,7 +294,7 @@ export const uploadOperationLog = async (file) => {
 export const uploadMaintenanceLog = async (file) => {
   const form = new FormData();
   form.append('file', file);
-  const response = await api.post('/setup/maintenance-log', form);
+  const response = await api.post('setup/maintenance-log', form);
   return response.data;
 };
 

@@ -5,7 +5,7 @@ import {
   PUMP_MASTER_FIELDS,
 } from '../../data/pumpTaxonomy';
 import { ChevronRight, ChevronLeft, Check, Zap, Upload, FileSpreadsheet, Edit3, FileUp } from 'lucide-react';
-import { uploadPumpMaster, uploadPumpMasterFile, uploadOperationLog, uploadMaintenanceLog } from '../../services/api';
+import { uploadPumpMaster, uploadPumpMasterFile, uploadOperationLog, uploadMaintenanceLog, createPump } from '../../services/api';
 
 const STEP_CATEGORY = 1;
 const STEP_TYPE = 2;
@@ -15,7 +15,9 @@ const STEP_MAINTENANCE_LOG = 5;
 
 const STEPS = [STEP_CATEGORY, STEP_TYPE, STEP_DATA, STEP_OPERATION_LOG, STEP_MAINTENANCE_LOG];
 
-export default function PumpSelectionFlow({ onSubmit }) {
+const FREE_PLAN_MAX_PUMPS = 2;
+
+export default function PumpSelectionFlow({ onSubmit, clientId, pumpsCount = 0 }) {
   const [step, setStep] = useState(STEP_CATEGORY);
   const [categoryId, setCategoryId] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
@@ -106,6 +108,10 @@ export default function PumpSelectionFlow({ onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploadError('');
+    if (clientId && pumpsCount >= FREE_PLAN_MAX_PUMPS) {
+      setUploadError(`Free plan allows only ${FREE_PLAN_MAX_PUMPS} pump(s). Upgrade to add more.`);
+      return;
+    }
     setUploading(true);
     try {
       const payload = {
@@ -119,7 +125,12 @@ export default function PumpSelectionFlow({ onSubmit }) {
       if (!masterDataFromUpload) await uploadPumpMaster(payload);
       if (operationLogFile) await uploadOperationLog(operationLogFile);
       if (maintenanceLogFile) await uploadMaintenanceLog(maintenanceLogFile);
-      onSubmit(payload);
+      if (clientId) {
+        const created = await createPump(payload, clientId);
+        onSubmit(created);
+      } else {
+        onSubmit(payload);
+      }
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Upload failed';
       setUploadError(msg);

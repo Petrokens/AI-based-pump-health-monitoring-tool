@@ -1,10 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Brain, TrendingUp, Settings, Bell, BarChart3, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Brain, TrendingUp, Settings, Bell, BarChart3, PlusCircle, CreditCard } from 'lucide-react';
 
 const Sidebar = ({ selectedView, onViewChange }) => {
   const menuItems = [
     { id: 'select-pump', icon: PlusCircle, label: 'Pump Setup' },
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'plan', icon: CreditCard, label: 'Plan' },
     { id: 'analytics', icon: BarChart3, label: 'Analytics' },
     { id: 'insights', icon: Brain, label: 'AI Insights' },
     { id: 'trends', icon: TrendingUp, label: 'Trend Explorer' },

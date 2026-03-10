@@ -1,69 +1,138 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Header from './components/common/Header';
+import AppTopbar from './components/common/AppTopbar';
 import Sidebar from './components/Sidebar';
 import AIInsights from './components/AIInsights';
 import TrendExplorer from './components/TrendExplorer';
-import PumpOverview from './components/dashboard/PumpOverview';
-import SealFailureForecast from './components/dashboard/SealFailureForecast';
-import BearingFailureForecast from './components/dashboard/BearingFailureForecast';
+import UniversalPdMDashboard from './components/dashboard/UniversalPdMDashboard';
+import PumpCards from './components/dashboard/PumpCards';
 import MLOutputs from './components/MLOutputs';
 import RootCausePanel from './components/RootCausePanel';
 import AlertsWorkflow from './components/AlertsWorkflow';
 import ReportsKPIs from './components/ReportsKPIs';
 import Settings from './components/Settings';
-import CavitationPrediction from './components/monitoring/CavitationPrediction';
-import VibrationAnomalyDetection from './components/monitoring/VibrationAnomalyDetection';
-import MotorOverloadingPrediction from './components/monitoring/MotorOverloadingPrediction';
-import PerformanceDegradation from './components/monitoring/PerformanceDegradation';
 import AnalyticsDashboard from './components/analytics/AnalyticsDashboard';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DemoProvider } from './contexts/DemoContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { fetchPumps } from './services/api';
+import { fetchPumps, createPump } from './services/api';
 
 import LandingPage from './components/LandingPage';
+import LoginPage from './components/auth/LoginPage';
+import DemoSignupPage from './components/auth/DemoSignupPage';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminOverview from './components/admin/AdminOverview';
+import ClientList from './components/admin/ClientList';
+import ClientDetail from './components/admin/ClientDetail';
+import DemoEntryList from './components/admin/DemoEntryList';
+import AdminSettings from './components/admin/AdminSettings';
+import AdminPlans from './components/admin/AdminPlans';
+import AdminPayments from './components/admin/AdminPayments';
+import AdminProducts from './components/admin/AdminProducts';
+import AdminReports from './components/admin/AdminReports';
+import AdminNotifications from './components/admin/AdminNotifications';
+import AdminAuditLog from './components/admin/AdminAuditLog';
+import AdminIntegrations from './components/admin/AdminIntegrations';
+import AdminSupport from './components/admin/AdminSupport';
 import PumpSelectionFlow from './components/setup/PumpSelectionFlow';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import ProfileCard from './components/profile/ProfileCard';
+import PlanPage from './components/plan/PlanPage';
 
-const VALID_VIEWS = ['dashboard', 'analytics', 'insights', 'trends', 'alerts', 'reports', 'settings'];
+const VALID_VIEWS = ['dashboard', 'analytics', 'insights', 'trends', 'alerts', 'reports', 'settings', 'plan'];
 function viewOrDashboard(view) {
   return VALID_VIEWS.includes(view) ? view : 'dashboard';
 }
 
-function SelectPumpLayout({ setPumps, setSelectedPump, pumps }) {
-  const navigate = useNavigate();
+// Default demo pumps shown when a new client has no pumps yet.
+// These IDs map to sample data in the backend (e.g. SAMPLE-01).
+const DEMO_PUMPS = [
+  {
+    id: 'SAMPLE-01',
+    name: 'Sample Process Pump - SAMPLE-01',
+    status: 'normal',
+    health_index: 88,
+    rul_hours: 480,
+    location: 'Process Unit 1',
+    model: 'ESO-200',
+    vendor: 'Generic',
+    rated_flow: 350,
+    ai_confidence: 92,
+    categoryLabel: 'Centrifugal Process Pump',
+    pumpType: 'End Suction Overhung',
+  },
+];
 
-  const handlePumpSetupComplete = (payload) => {
-    const id = payload.pump_id || payload.pumpId || 'P-101A';
-    const newPump = {
-      id,
-      name: payload.model ? `${payload.model} - ${id}` : `${payload.pumpType || 'Pump'} - ${id}`,
-      status: 'normal',
-      health_index: 85,
-      rul_hours: 500,
-      location: 'Pump House - Unit 1',
-      model: payload.model || 'Custom',
-      vendor: payload.manufacturer || 'Unknown',
-      rated_flow: payload.flow ?? 150,
-      ai_confidence: 90,
-    };
-    setPumps((prev) => [newPump, ...(prev || [])]);
-    setSelectedPump(id);
+function RequireAdmin({ children }) {
+  const { isAuthenticated, isAdmin } = useAuth();
+  const location = useLocation();
+  const from = location.pathname + location.search;
+  if (!isAuthenticated) {
+    return <Navigate to={`/login?from=${encodeURIComponent(from)}`} replace />;
+  }
+  if (!isAdmin) return <Navigate to="/app/select-pump" replace />;
+  return children;
+}
+
+function RequireClient({ children }) {
+  const { isAuthenticated, isAdmin } = useAuth();
+  // For now, allow unauthenticated users to access client app routes
+  // so that deep links like /app/select-pump work even before login.
+  if (isAdmin) return <Navigate to="/admin" replace />;
+  return children;
+}
+
+function SelectPumpLayout({ setPumps, setSelectedPump, pumps, clientId, loadPumps }) {
+  const navigate = useNavigate();
+  const { user, getCurrentClient } = useAuth();
+  const client = getCurrentClient?.() ?? null;
+
+  const handlePumpSetupComplete = (pumpOrPayload) => {
+    const isApiPump = pumpOrPayload && typeof pumpOrPayload.id !== 'undefined' && pumpOrPayload.name;
+    const pump = isApiPump
+      ? pumpOrPayload
+      : {
+          id: pumpOrPayload.pump_id || pumpOrPayload.pumpId || 'P-101A',
+          name: pumpOrPayload.model ? `${pumpOrPayload.model} - ${pumpOrPayload.pump_id}` : `${pumpOrPayload.pumpType || 'Pump'} - ${pumpOrPayload.pump_id}`,
+          status: 'normal',
+          health_index: 85,
+          rul_hours: 500,
+          location: 'Pump House - Unit 1',
+          model: pumpOrPayload.model || 'Custom',
+          vendor: pumpOrPayload.manufacturer || 'Unknown',
+          rated_flow: pumpOrPayload.flow ?? 150,
+          ai_confidence: 90,
+          categoryLabel: pumpOrPayload.categoryLabel,
+          pumpType: pumpOrPayload.pumpType,
+        };
+    setPumps((prev) => [pump, ...(prev || [])]);
+    setSelectedPump(pump.id);
+    if (clientId && loadPumps) loadPumps();
     navigate('/app/dashboard');
   };
 
   return (
-    <div className="flex h-screen bg-[var(--bg-primary)]">
+    <div className="flex h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       <Sidebar selectedView="select-pump" onViewChange={(id) => navigate(`/app/${id}`)} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-[var(--bg-header)] border-b border-[var(--border-color)] px-6 py-4">
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Pump Selection & Setup</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-            Select category, type, and enter pump data to open the predictive maintenance dashboard.
-          </p>
-        </header>
-        <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
-          <PumpSelectionFlow onSubmit={handlePumpSetupComplete} />
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <AppTopbar
+          title="Pump Selection & Setup"
+          subtitle="Select category, type, and enter pump data to open the predictive maintenance dashboard."
+        />
+        <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6 min-h-0" style={{ minHeight: '400px' }}>
+          <div className="space-y-6 max-w-5xl">
+            <ErrorBoundary>
+              <ProfileCard user={user ?? {}} client={client ?? null} pumpsCount={pumps?.length ?? 0} />
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <PumpSelectionFlow
+                clientId={clientId}
+                onSubmit={handlePumpSetupComplete}
+                pumpsCount={pumps?.length ?? 0}
+              />
+            </ErrorBoundary>
+          </div>
         </main>
       </div>
     </div>
@@ -78,27 +147,23 @@ function MainAppLayout({
   loading,
   error,
   lastUpdate,
+  initialView,
 }) {
-  const { view } = useParams();
+  const { view: routeView } = useParams();
   const navigate = useNavigate();
-  const selectedView = viewOrDashboard(view);
+  const effectiveView = initialView || routeView;
+  const selectedView = viewOrDashboard(effectiveView);
   const currentPump = pumps.find((p) => p.id === selectedPump);
 
   // Redirect invalid view param to dashboard (shareable URLs stay valid)
   React.useEffect(() => {
-    if (view && !VALID_VIEWS.includes(view)) {
+    if (routeView && !VALID_VIEWS.includes(routeView)) {
       navigate('/app/dashboard', { replace: true });
     }
-  }, [view, navigate]);
+  }, [routeView, navigate]);
 
   const handleViewChange = (id) => navigate(`/app/${id}`);
-
-  // If dashboard has no pumps, send user to pump selection first
-  React.useEffect(() => {
-    if (selectedView === 'dashboard' && pumps.length === 0) {
-      navigate('/app/select-pump', { replace: true });
-    }
-  }, [selectedView, pumps.length, navigate]);
+  const hasNoPumps = !loading && !error && pumps.length === 0;
 
   return (
     <div className="flex h-screen bg-[var(--bg-primary)]">
@@ -124,44 +189,53 @@ function MainAppLayout({
               <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 max-w-md">
                 <h3 className="text-red-500 font-bold text-lg mb-2">Connection Error</h3>
                 <p className="text-[var(--text-secondary)] mb-4">{error}</p>
-                <button
-                  onClick={loadPumps}
-                  className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Retry Connection
-                </button>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={loadPumps}
+                    className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Retry Connection
+                  </button>
+                  <button
+                    onClick={() => navigate('/app/select-pump')}
+                    className="border border-[var(--border-color)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Add pump
+                  </button>
+                </div>
               </div>
             </div>
-          ) : pumps.length === 0 ? (
+          ) : hasNoPumps && selectedView !== 'plan' ? (
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="bg-yellow-500/10 border border-yellow-500 rounded-xl p-6 max-w-md">
-                <h3 className="text-yellow-500 font-bold text-lg mb-2">No Data Available</h3>
-                <p className="text-[var(--text-secondary)]">No pump data found. Please check the backend server.</p>
+              <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-8 max-w-md text-center">
+                <h3 className="text-[var(--text-primary)] font-bold text-lg mb-2">No pumps yet</h3>
+                <p className="text-[var(--text-secondary)] mb-6">
+                  Set up your first pump to see the dashboard, analytics, and other views.
+                </p>
+                <button
+                  onClick={() => navigate('/app/select-pump')}
+                  className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Set up pump
+                </button>
               </div>
             </div>
           ) : (
             <>
               {selectedView === 'dashboard' && (
                     <>
-                      <PumpOverview pumpId={selectedPump} />
-                      <SectionToggle title="A. Seal Health" subtitle="Seal failure forecast & risk">
-                        <SealFailureForecast pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="B. Bearing Failure Forecast" subtitle="Health, RUL, and actions">
-                        <BearingFailureForecast pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="C. Cavitation Prediction" subtitle="NPSH vs cavitation risk">
-                        <CavitationPrediction pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="D. Vibration Anomaly Detection" subtitle="FFT + fault identification">
-                        <VibrationAnomalyDetection pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="E. Motor Overloading Prediction" subtitle="Motor draw vs hydraulic load">
-                        <MotorOverloadingPrediction pumpId={selectedPump} />
-                      </SectionToggle>
-                      <SectionToggle title="F. Performance Degradation" subtitle="Curve deviation, efficiency drop">
-                        <PerformanceDegradation pumpId={selectedPump} />
-                      </SectionToggle>
+                      <PumpCards
+                        pumps={pumps}
+                        selectedPumpId={selectedPump}
+                        onSelectPump={setSelectedPump}
+                        onAddPump={() => navigate('/app/select-pump')}
+                      />
+                      <UniversalPdMDashboard
+                        pumpId={selectedPump}
+                        pumps={pumps}
+                        selectedPump={selectedPump}
+                        onPumpSelect={setSelectedPump}
+                      />
                     </>
                   )}
 
@@ -192,6 +266,10 @@ function MainAppLayout({
                   {selectedView === 'settings' && (
                     <Settings />
                   )}
+
+                  {selectedView === 'plan' && (
+                    <PlanPage pumps={pumps} />
+                  )}
                 </>
               )}
             </main>
@@ -200,42 +278,71 @@ function MainAppLayout({
   );
 }
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function ClientAppRoutes() {
+  const { user } = useAuth();
+  const clientId = user?.clientId ?? null;
   const [selectedPump, setSelectedPump] = useState('P-101A');
   const [pumps, setPumps] = useState([]);
-  const [selectedView, setSelectedView] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  useEffect(() => {
-    // Only start polling if logged in
-    if (!isLoggedIn) return;
+  const loadPumps = async () => {
+    try {
+      setError(null);
+      const data = await fetchPumps(clientId || undefined);
+      const list = Array.isArray(data) ? data : [];
 
-    let pollingInterval = 10000; // Start with 10 seconds (reduce spam)
+      if (list.length > 0) {
+        setPumps(list);
+        setSelectedPump((prevSelected) => {
+          if (prevSelected && list.find((p) => p.id === prevSelected)) return prevSelected;
+          return list[0].id;
+        });
+      } else {
+        // New client or empty backend: fall back to demo pump list
+        setPumps(DEMO_PUMPS);
+        setSelectedPump(DEMO_PUMPS[0].id);
+      }
+      setLoading(false);
+    } catch (err) {
+      if (!err._logged) {
+        err._logged = true;
+        console.error('Error loading pumps:', err);
+      }
+      let errorMessage = 'Failed to connect to backend.';
+      if (err.code === 'ECONNABORTED' || err.message?.includes?.('timeout')) {
+        errorMessage = 'Backend request timed out.';
+      } else if (err.code === 'ERR_NETWORK') {
+        errorMessage = 'Cannot connect to backend. Please check the server.';
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let pollingInterval = 10000;
     let intervalId = null;
     let consecutiveFailures = 0;
 
-    // Initial load with exponential backoff retry logic
     const attemptLoad = async (retries = 5) => {
       let retryDelay = 2000;
       for (let i = 0; i < retries; i++) {
         try {
           await loadPumps();
           consecutiveFailures = 0;
-          pollingInterval = 10000; // Reset to 10s on success
-          break; // Success, exit retry loop
-        } catch (error) {
+          break;
+        } catch (err) {
           consecutiveFailures++;
-          if (i === retries - 1) {
-            // Last attempt failed
-            console.warn('Failed to connect after', retries, 'attempts. Backend may be sleeping.');
-            pollingInterval = 30000; // Increase delay on persistent failure
-          } else {
-            // Exponential backoff: 2s, 4s, 8s, 16s
+          if (i === retries - 1) pollingInterval = 30000;
+          else {
             retryDelay = Math.min(16000, retryDelay * 2);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            await new Promise((r) => setTimeout(r, retryDelay));
           }
         }
       }
@@ -243,146 +350,125 @@ function App() {
 
     attemptLoad();
 
-    // Adaptive polling: slower when errors occur, faster when successful
     const scheduleNextPoll = () => {
-      if (intervalId) {
-        clearTimeout(intervalId);
-      }
+      if (intervalId) clearTimeout(intervalId);
       intervalId = setTimeout(async () => {
         try {
           await loadPumps();
           consecutiveFailures = 0;
-          pollingInterval = 10000; // Reset to 10s on success
           setLastUpdate(new Date());
-        } catch (error) {
+        } catch (err) {
           consecutiveFailures++;
-          // On error, increase polling interval to reduce spam
-          pollingInterval = Math.min(30000, 10000 + (consecutiveFailures * 5000));
+          pollingInterval = Math.min(30000, 10000 + consecutiveFailures * 5000);
         }
         scheduleNextPoll();
       }, pollingInterval);
     };
 
-    // Start polling after initial load
     scheduleNextPoll();
+    return () => { if (intervalId) clearTimeout(intervalId); };
+  }, [clientId]);
 
-    return () => {
-      if (intervalId) {
-        clearTimeout(intervalId);
-      }
-    };
-  }, [isLoggedIn]);
-
-  const loadPumps = async () => {
-    try {
-      setError(null);
-      const data = await fetchPumps();
-      if (data && data.length > 0) {
-        setPumps(data);
-        setSelectedPump(prevSelected => {
-          if (prevSelected && data.find(p => p.id === prevSelected)) {
-            return prevSelected;
-          }
-          return data[0].id;
-        });
-        setLoading(false);
-      } else {
-        setError('No pump data available');
-        setLoading(false);
-      }
-    } catch (error) {
-      // Only log first error to reduce spam
-      if (!error._logged) {
-        error._logged = true;
-        console.error('Error loading pumps:', error);
-      }
-
-      let errorMessage = 'Failed to connect to backend.';
-      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMessage = 'Backend request timed out. The server may be processing large datasets.';
-      } else if (error.code === 'ERR_NETWORK') {
-        errorMessage = 'Cannot connect to backend. The server may be sleeping (Render free tier takes ~30s to wake up) or unreachable. Please wait and refresh.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      }
-      setError(errorMessage);
-      setLoading(false);
-    }
-  };
-
-  const navigate = useNavigate();
-
-  if (!isLoggedIn) {
-    return (
-      <LandingPage
-        onLogin={() => {
-          setIsLoggedIn(true);
-          navigate('/app/select-pump');
-        }}
-      />
-    );
-  }
+  const selectPumpEl = (
+    <SelectPumpLayout
+      setPumps={setPumps}
+      setSelectedPump={setSelectedPump}
+      pumps={pumps}
+      clientId={clientId}
+      loadPumps={loadPumps}
+    />
+  );
 
   return (
+    <Routes>
+      {/* /app with no segment → go to select-pump */}
+      <Route path="/app" element={<Navigate to="/app/select-pump" replace />} />
+      {/* Pump setup: match both relative (v7_relativeSplatPath) and absolute */}
+      <Route path="/app/select-pump" element={selectPumpEl} />
+      <Route path="select-pump" element={selectPumpEl} />
+      {/* Dashboard, plan, analytics, etc. */}
+      <Route
+        path="/app/:view"
+        element={
+          <MainAppLayout
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+          />
+        }
+      />
+      <Route
+        path=":view"
+        element={
+          <MainAppLayout
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+          />
+        }
+      />
+      <Route path="*" element={<Navigate to="/app/select-pump" replace />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
     <ThemeProvider>
-      <DemoProvider>
-        <Routes>
-          <Route path="/" element={<Navigate to="/app/select-pump" replace />} />
-          <Route path="/app" element={<Navigate to="/app/select-pump" replace />} />
-          <Route
-            path="/app/select-pump"
-            element={
-              <SelectPumpLayout
-                setPumps={setPumps}
-                setSelectedPump={setSelectedPump}
-                pumps={pumps}
-              />
-            }
-          />
-          <Route
-            path="/app/:view"
-            element={
-              <MainAppLayout
-                pumps={pumps}
-                selectedPump={selectedPump}
-                setSelectedPump={setSelectedPump}
-                loadPumps={loadPumps}
-                loading={loading}
-                error={error}
-                lastUpdate={lastUpdate}
-              />
-            }
-          />
-          <Route path="*" element={<Navigate to="/app/select-pump" replace />} />
-        </Routes>
-      </DemoProvider>
+      <AuthProvider>
+        <DemoProvider>
+          <Routes>
+            {/* Public: landing, login, demo signup */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/demo" element={<DemoSignupPage />} />
+            {/* Admin: /admin, /admin/clients, /admin/clients/:id, /admin/demo-entries, /admin/settings */}
+            <Route
+              path="/admin"
+              element={
+                <RequireAdmin>
+                  <AdminLayout />
+                </RequireAdmin>
+              }
+            >
+              <Route index element={<AdminOverview />} />
+              <Route path="clients" element={<ClientList />} />
+              <Route path="clients/:id" element={<ClientDetail />} />
+              <Route path="demo-entries" element={<DemoEntryList />} />
+              <Route path="plans" element={<AdminPlans />} />
+              <Route path="payments" element={<AdminPayments />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="notifications" element={<AdminNotifications />} />
+              <Route path="audit-log" element={<AdminAuditLog />} />
+              <Route path="integrations" element={<AdminIntegrations />} />
+              <Route path="support" element={<AdminSupport />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+            {/* Client app: /app, /app/select-pump, /app/dashboard, /app/analytics, /app/insights, /app/trends, /app/alerts, /app/reports, /app/settings, /app/plan */}
+            <Route
+              path="/app/*"
+              element={
+                <RequireClient>
+                  <ClientAppRoutes />
+                </RequireClient>
+              }
+            />
+            {/* 404 → landing */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </DemoProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
 
 export default App;
-
-const SectionToggle = ({ title, subtitle, children, defaultOpen = false }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="bg-[var(--bg-card)]/80 border border-[var(--border-color)] rounded-2xl mb-4 shadow-lg" style={{ boxShadow: 'var(--shadow-lg)' }}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
-        aria-expanded={open}
-        aria-controls={`section-${title.replace(/\s+/g, '-')}`}
-      >
-        <div>
-          <p className="text-sm font-semibold text-[var(--text-primary)]">{title}</p>
-          {subtitle && <p className="text-xs text-[var(--text-secondary)]">{subtitle}</p>}
-        </div>
-        {open ? <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronRight className="w-4 h-4 text-[var(--text-tertiary)]" />}
-      </button>
-      {open && <div id={`section-${title.replace(/\s+/g, '-')}`} className="px-2 pb-3" role="region" aria-label={title}><div className="rounded-xl overflow-hidden">{children}</div></div>}
-    </div>
-  );
-};
-
