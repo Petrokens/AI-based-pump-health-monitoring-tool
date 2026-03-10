@@ -45,25 +45,6 @@ function viewOrDashboard(view) {
   return VALID_VIEWS.includes(view) ? view : 'dashboard';
 }
 
-// Default demo pumps shown when a new client has no pumps yet.
-// These IDs map to sample data in the backend (e.g. SAMPLE-01).
-const DEMO_PUMPS = [
-  {
-    id: 'SAMPLE-01',
-    name: 'Sample Process Pump - SAMPLE-01',
-    status: 'normal',
-    health_index: 88,
-    rul_hours: 480,
-    location: 'Process Unit 1',
-    model: 'ESO-200',
-    vendor: 'Generic',
-    rated_flow: 350,
-    ai_confidence: 92,
-    categoryLabel: 'Centrifugal Process Pump',
-    pumpType: 'End Suction Overhung',
-  },
-];
-
 function RequireAdmin({ children }) {
   const { isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
@@ -230,12 +211,18 @@ function MainAppLayout({
                         onSelectPump={setSelectedPump}
                         onAddPump={() => navigate('/app/select-pump')}
                       />
-                      <UniversalPdMDashboard
-                        pumpId={selectedPump}
-                        pumps={pumps}
-                        selectedPump={selectedPump}
-                        onPumpSelect={setSelectedPump}
-                      />
+                      {selectedPump && pumps.some((p) => p.id === selectedPump) ? (
+                        <UniversalPdMDashboard
+                          pumpId={selectedPump}
+                          pumps={pumps}
+                          selectedPump={selectedPump}
+                          onPumpSelect={setSelectedPump}
+                        />
+                      ) : pumps.length > 0 ? (
+                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-8 text-center">
+                          <p className="text-[var(--text-secondary)]">Click a pump card above to open its details.</p>
+                        </div>
+                      ) : null}
                     </>
                   )}
 
@@ -292,18 +279,12 @@ function ClientAppRoutes() {
       setError(null);
       const data = await fetchPumps(clientId || undefined);
       const list = Array.isArray(data) ? data : [];
-
-      if (list.length > 0) {
-        setPumps(list);
-        setSelectedPump((prevSelected) => {
-          if (prevSelected && list.find((p) => p.id === prevSelected)) return prevSelected;
-          return list[0].id;
-        });
-      } else {
-        // New client or empty backend: fall back to demo pump list
-        setPumps(DEMO_PUMPS);
-        setSelectedPump(DEMO_PUMPS[0].id);
-      }
+      setPumps(list);
+      setSelectedPump((prevSelected) => {
+        if (list.length === 0) return '';
+        if (prevSelected && list.find((p) => p.id === prevSelected)) return prevSelected;
+        return list[0].id;
+      });
       setLoading(false);
     } catch (err) {
       if (!err._logged) {
