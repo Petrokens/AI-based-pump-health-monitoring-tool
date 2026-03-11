@@ -78,7 +78,11 @@ export default function PlanPage({ pumps = [] }) {
 
         <h3 className="text-base font-semibold text-[var(--text-primary)] mt-6 mb-3">Change plan</h3>
         {error && (
-          <p className="text-sm text-red-400 mb-3">{error}</p>
+          <p className="text-sm text-red-400 mb-3">
+            {error.toLowerCase().includes('client not found')
+              ? "Your account isn't synced with our server. Please log out and sign up again from the signup page so plan changes can be saved, or contact support."
+              : error}
+          </p>
         )}
         {loading ? (
           <p className="text-sm text-[var(--text-secondary)]">Loading plans…</p>

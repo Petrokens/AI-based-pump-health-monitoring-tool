@@ -4,7 +4,7 @@ import { Activity, Clock, Sun, Moon, User, LogOut, ChevronDown } from 'lucide-re
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStatus }) => {
+const Header = ({ lastUpdate, currentPumpStatus }) => {
   const { theme, toggleTheme } = useTheme();
   const { user, logout, clients } = useAuth();
   const navigate = useNavigate();
@@ -63,26 +63,6 @@ const Header = ({ selectedPump, onPumpChange, pumps, lastUpdate, currentPumpStat
               <h1 className="text-xl font-bold text-[var(--text-primary)]">Petrokens Pump Predictive Maintenance</h1>
               <p className="text-sm text-[var(--text-secondary)]">Cooling Water Pump House - Unit 1</p>
             </div>
-          </div>
-
-          <div className="border-l border-[var(--border-light)] pl-6">
-            <label className="text-sm text-[var(--text-secondary)] block mb-1">Pump ID</label>
-            <select
-              value={selectedPump}
-              onChange={(e) => onPumpChange(e.target.value)}
-              className="bg-[var(--bg-input)] text-[var(--text-primary)] px-4 py-2 rounded-lg border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-primary-500"
-              disabled={!pumps || pumps.length === 0}
-            >
-              {pumps && pumps.length > 0 ? (
-                pumps.map((pump) => (
-                  <option key={pump.id} value={pump.id}>
-                    {pump.id} - {pump.name}
-                  </option>
-                ))
-              ) : (
-                <option value="">No pumps available</option>
-              )}
-            </select>
           </div>
         </div>
 

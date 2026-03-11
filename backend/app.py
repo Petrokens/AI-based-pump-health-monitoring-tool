@@ -135,6 +135,27 @@ def safe_float_param(value: Any, default: float, min_val: Optional[float] = None
     except (ValueError, TypeError):
         return default
 
+def _synthetic_latest_reading(pump_id: str, pump_row: Optional[pd.Series] = None) -> Dict[str, Any]:
+    """Return synthetic sensor reading when pump is in pump_master but has no operation log data."""
+    if pump_row is None:
+        pm = pump_master_df[pump_master_df["pump_id"] == pump_id]
+        if pm.empty:
+            raise ValueError(f"Pump {pump_id} not in pump_master")
+        pump_row = pm.iloc[0]
+    rated_flow = float(convert_to_python_type(pump_row.get("rated_flow_m3h", 150)))
+    rated_rpm = float(convert_to_python_type(pump_row.get("rated_rpm", 1450)))
+    rated_power = float(convert_to_python_type(pump_row.get("rated_power_kw", 22)))
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "flow_m3h": rated_flow * 0.85,
+        "discharge_pressure_bar": 4.2,
+        "suction_pressure_bar": 1.1,
+        "motor_power_kw": rated_power * 0.9,
+        "rpm": rated_rpm,
+        "status": "running",
+    }
+
+
 # Lightweight cache for expensive endpoints
 PUMP_LIST_CACHE = {
     "data": None,
@@ -1441,27 +1462,28 @@ def control_pump(pump_id):
 
 @app.route('/api/pump/<pump_id>/realtime', methods=['GET'])
 def get_realtime_data(pump_id):
-    """Get real-time sensor data from CSV"""
+    """Get real-time sensor data from CSV (or synthetic from pump_master if no operation data)"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
-        
-        # Add simulated bearing temp and vibration (not in CSV)
-        latest_data['bearing_temp'] = 65.0 + np.random.randn() * 3
-        latest_data['vibration'] = 2.5 + np.random.randn() * 0.5
-        latest_data['displacement'] = 50.0 + np.random.randn() * 5
-        
+        try:
+            latest_data = RealDataProvider.get_latest_reading(pump_id)
+        except (ValueError, KeyError):
+            latest_data = _synthetic_latest_reading(pump_id)
+        latest_data.setdefault("bearing_temp", 65.0 + np.random.randn() * 3)
+        latest_data.setdefault("vibration", 2.5 + np.random.randn() * 0.5)
+        latest_data.setdefault("displacement", 50.0 + np.random.randn() * 5)
+
         return jsonify({
             "pump_id": str(pump_id),
             "timestamp": datetime.now().isoformat(),
             "data": {
-                "flow": float(round(latest_data['flow_m3h'], 2)),
-                "suction_pressure": float(round(latest_data['suction_pressure_bar'], 2)),
-                "discharge_pressure": float(round(latest_data['discharge_pressure_bar'], 2)),
-                "motor_current": float(round(latest_data['motor_power_kw'] / 0.4, 2)),
-                "bearing_temp": float(round(latest_data['bearing_temp'], 1)),
-                "vibration": float(round(latest_data['vibration'], 2)),
-                "displacement": float(round(latest_data['displacement'], 1))
-            }
+                "flow": float(round(latest_data["flow_m3h"], 2)),
+                "suction_pressure": float(round(latest_data["suction_pressure_bar"], 2)),
+                "discharge_pressure": float(round(latest_data["discharge_pressure_bar"], 2)),
+                "motor_current": float(round(latest_data["motor_power_kw"] / 0.4, 2)),
+                "bearing_temp": float(round(latest_data["bearing_temp"], 1)),
+                "vibration": float(round(latest_data["vibration"], 2)),
+                "displacement": float(round(latest_data["displacement"], 1)),
+            },
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 404
@@ -1476,7 +1498,10 @@ def get_pump_kpis(pump_id):
             return jsonify({"error": "Pump not found"}), 404
         pump_info = pump_row.iloc[0]
 
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        try:
+            latest_data = RealDataProvider.get_latest_reading(pump_id)
+        except (ValueError, KeyError):
+            latest_data = _synthetic_latest_reading(pump_id, pump_info)
         
         # AI predictions
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
@@ -1854,15 +1879,23 @@ def get_dashboard_summary():
 def get_pump_overview(pump_id):
     """Get comprehensive top-line overview for a pump"""
     try:
+        # Require pump to be in pump_master
+        pm = pump_master_df[pump_master_df["pump_id"] == pump_id]
+        if pm.empty:
+            return jsonify({"error": f"Pump {pump_id} not found"}), 404
+        pump_info = pm.iloc[0]
+
         at_ts = _parse_at_param(request.args.get('at'))
-        latest_data = RealDataProvider.get_latest_reading(pump_id, at_ts)
+        try:
+            latest_data = RealDataProvider.get_latest_reading(pump_id, at_ts)
+        except (ValueError, KeyError):
+            # No operation log data: use synthetic from pump_master so dashboard still shows data
+            latest_data = _synthetic_latest_reading(pump_id, pump_info)
+
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
         raw_rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
         rul = ai_predictor.clamp_rul_hours(raw_rul)
-        
-        # Get pump master data
-        pump_info = pump_master_df[pump_master_df['pump_id'] == pump_id].iloc[0]
         master_health = convert_to_python_type(pump_info.get("health_score"))
         display_health = float(master_health) if master_health is not None else health_index
         specs = {

@@ -7,6 +7,8 @@ import AIInsights from './components/AIInsights';
 import TrendExplorer from './components/TrendExplorer';
 import UniversalPdMDashboard from './components/dashboard/UniversalPdMDashboard';
 import PumpCards from './components/dashboard/PumpCards';
+import PumpDashboardPage from './components/dashboard/PumpDashboardPage';
+import DigitalTwinView from './components/digital-twin/DigitalTwinView';
 import MLOutputs from './components/MLOutputs';
 import RootCausePanel from './components/RootCausePanel';
 import AlertsWorkflow from './components/AlertsWorkflow';
@@ -151,13 +153,7 @@ function MainAppLayout({
       <Sidebar selectedView={selectedView} onViewChange={handleViewChange} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          selectedPump={selectedPump}
-          onPumpChange={setSelectedPump}
-          pumps={pumps}
-          lastUpdate={lastUpdate}
-          currentPumpStatus={currentPump?.status}
-        />
+        <Header lastUpdate={lastUpdate} currentPumpStatus={currentPump?.status} />
 
         <main className="flex-1 overflow-y-auto bg-[var(--bg-primary)] p-6">
           {loading ? (
@@ -204,26 +200,13 @@ function MainAppLayout({
           ) : (
             <>
               {selectedView === 'dashboard' && (
-                    <>
-                      <PumpCards
-                        pumps={pumps}
-                        selectedPumpId={selectedPump}
-                        onSelectPump={setSelectedPump}
-                        onAddPump={() => navigate('/app/select-pump')}
-                      />
-                      {selectedPump && pumps.some((p) => p.id === selectedPump) ? (
-                        <UniversalPdMDashboard
-                          pumpId={selectedPump}
-                          pumps={pumps}
-                          selectedPump={selectedPump}
-                          onPumpSelect={setSelectedPump}
-                        />
-                      ) : pumps.length > 0 ? (
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-8 text-center">
-                          <p className="text-[var(--text-secondary)]">Click a pump card above to open its details.</p>
-                        </div>
-                      ) : null}
-                    </>
+                    <PumpCards
+                      pumps={pumps}
+                      selectedPumpId={selectedPump}
+                      onSelectPump={setSelectedPump}
+                      onAddPump={() => navigate('/app/select-pump')}
+                      onCardClick={(pump) => navigate(`/app/pump/${pump.id}/dashboard`)}
+                    />
                   )}
 
                   {selectedView === 'insights' && (
@@ -364,7 +347,67 @@ function ClientAppRoutes() {
     <Routes>
       {/* /app with no segment → go to select-pump */}
       <Route path="/app" element={<Navigate to="/app/select-pump" replace />} />
-      {/* Pump setup: match both relative (v7_relativeSplatPath) and absolute */}
+      {/* Single-pump dashboard: support both full path and relative (under /app/*) */}
+      <Route
+        path="/app/pump/:pumpId/dashboard"
+        element={
+          <PumpDashboardPage
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+          />
+        }
+      />
+      <Route
+        path="pump/:pumpId/dashboard"
+        element={
+          <PumpDashboardPage
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+          />
+        }
+      />
+      {/* Digital Twin – 3D live pump view */}
+      <Route
+        path="/app/pump/:pumpId/digital-twin"
+        element={
+          <PumpDashboardPage
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+            view="digital-twin"
+          />
+        }
+      />
+      <Route
+        path="pump/:pumpId/digital-twin"
+        element={
+          <PumpDashboardPage
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+            view="digital-twin"
+          />
+        }
+      />
+      {/* Pump setup */}
       <Route path="/app/select-pump" element={selectPumpEl} />
       <Route path="select-pump" element={selectPumpEl} />
       {/* Dashboard, plan, analytics, etc. */}

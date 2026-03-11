@@ -302,16 +302,45 @@ def pumps_list_by_client(client_id: str) -> List[Dict[str, Any]]:
     return [_sanitize_doc(d) for d in cursor]
 
 
+def _ensure_client_exists(client_id: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Return the client by id. If not found, create a minimal client record so pump creation can proceed
+    (e.g. user signed up when DB was down or clientId from localStorage was never persisted).
+    """
+    client = admin_get_client(client_id)
+    if client:
+        return client
+    db = get_db()
+    if db is None:
+        return None
+    from bson.objectid import ObjectId
+    now = datetime.utcnow().isoformat() + "Z"
+    # Minimal client so lookups by id work; use string id as provided (e.g. client-123 or MongoDB hex)
+    doc = {
+        "_id": ObjectId(),
+        "id": client_id,
+        "name": payload.get("name") or payload.get("companyName") or "",
+        "companyName": payload.get("companyName") or payload.get("name") or "",
+        "email": (payload.get("email") or "").strip().lower() or None,
+        "plan": "Free",
+        "createdAt": now,
+    }
+    db[COLL_CLIENTS].insert_one(doc)
+    logger.info("Auto-created minimal client for id=%s (was not found in DB)", client_id)
+    return _sanitize_doc(doc)
+
+
 def pump_create(client_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Create a pump for the client. Checks plan limit (Free = 2 pumps max).
+    If the client does not exist in DB, creates a minimal client so creation can proceed.
     Returns { "ok": True, "pump": {...} } or { "ok": False, "error": "..." }.
     """
     db = get_db()
     if db is None:
         return {"ok": False, "error": "Database not available"}
 
-    client = admin_get_client(client_id)
+    client = _ensure_client_exists(client_id, payload)
     if not client:
         return {"ok": False, "error": "Client not found"}
 

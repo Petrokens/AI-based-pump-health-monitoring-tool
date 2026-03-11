@@ -128,6 +128,42 @@ export function AuthProvider({ children }) {
     );
   };
 
+  /** After backend register-demo succeeds: store user, client, and demo entry so plan/pumps work. */
+  const completeRegistrationFromBackend = (response, formData) => {
+    if (!response?.ok || !response?.user || !response?.clientId || !response?.demoId) return;
+    const { user, clientId, demoId } = response;
+    const now = new Date().toISOString();
+    const client = {
+      id: clientId,
+      name: formData.name || '',
+      companyName: formData.companyName || '',
+      email: (formData.email || '').trim().toLowerCase(),
+      password: formData.password || '',
+      numberOfPumps: formData.numberOfPumps ?? 0,
+      phone: formData.phone || '',
+      companyLogoPreview: formData.companyLogoPreview,
+      companyLogoFileName: formData.companyLogoFileName,
+      plan: 'Free',
+      createdAt: now,
+    };
+    const demoEntry = {
+      id: demoId,
+      clientId,
+      name: formData.name || '',
+      companyName: formData.companyName || '',
+      email: (formData.email || '').trim().toLowerCase(),
+      numberOfPumps: formData.numberOfPumps ?? 0,
+      phone: formData.phone || '',
+      companyLogoPreview: formData.companyLogoPreview,
+      companyLogoFileName: formData.companyLogoFileName,
+      createdAt: now,
+      status: 'pending',
+    };
+    setClients((prev) => [client, ...prev]);
+    setDemoEntries((prev) => [demoEntry, ...prev]);
+    setUser(user);
+  };
+
   const value = {
     user,
     isAdmin,
@@ -142,6 +178,7 @@ export function AuthProvider({ children }) {
     updateDemoEntryStatus,
     getCurrentClient,
     updateClientPlan,
+    completeRegistrationFromBackend,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

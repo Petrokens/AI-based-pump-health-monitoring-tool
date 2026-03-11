@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Building2, Mail, Lock, Zap, ArrowLeft, Phone, Image } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { registerDemoApi } from '../../services/api';
 
 export default function DemoSignupPage() {
   const navigate = useNavigate();
-  const { registerDemo } = useAuth();
+  const { completeRegistrationFromBackend } = useAuth();
   const [form, setForm] = useState({
     name: '',
     companyName: '',
@@ -41,21 +42,35 @@ export default function DemoSignupPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!form.email || !form.password) {
       setError('Email and password are required.');
       return;
     }
-    const result = registerDemo({
+    const payload = {
       ...form,
       numberOfPumps: form.numberOfPumps ? Number(form.numberOfPumps) : 0,
       companyLogoPreview: companyLogoPreview || undefined,
       companyLogoFileName: companyLogoFile?.name,
-    });
-    if (result.ok) navigate('/app/select-pump');
-    else setError(result.error || 'Registration failed.');
+    };
+    setSubmitting(true);
+    try {
+      const response = await registerDemoApi(payload);
+      if (response?.ok) {
+        completeRegistrationFromBackend(response, payload);
+        navigate('/app/select-pump');
+        return;
+      }
+      setError(response?.error || 'Registration failed.');
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || 'Registration failed. Make sure the backend is running.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -209,9 +224,10 @@ export default function DemoSignupPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+              disabled={submitting}
+              className="w-full py-3.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Zap className="w-5 h-5" /> Get Demo Now — 30 Days Free
+              <Zap className="w-5 h-5" /> {submitting ? 'Signing up…' : 'Get Demo Now — 30 Days Free'}
             </button>
           </form>
 

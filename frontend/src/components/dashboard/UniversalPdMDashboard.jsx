@@ -126,7 +126,7 @@ function SmallGauge({ value, max = 100, label, unit }) {
   );
 }
 
-export default function UniversalPdMDashboard({ pumpId, pumps = [], selectedPump, onPumpSelect }) {
+export default function UniversalPdMDashboard({ pumpId, pumps = [], selectedPump, onPumpSelect, hidePumpList = false }) {
   const [pumpListView, setPumpListView] = useState('cards'); // 'cards' | 'table'
   const [overview, setOverview] = useState(null);
   const [hydraulic, setHydraulic] = useState(null);
@@ -256,8 +256,8 @@ export default function UniversalPdMDashboard({ pumpId, pumps = [], selectedPump
         </div>
       )}
 
-      {/* ========== Your Pumps – Card / Table view ========== */}
-      {pumpList.length > 0 && (
+      {/* ========== Your Pumps – Card / Table view (hidden on single-pump dashboard) ========== */}
+      {!hidePumpList && pumpList.length > 0 && (
         <section className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Your Pumps</h2>

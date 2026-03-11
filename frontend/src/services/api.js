@@ -187,6 +187,19 @@ export const updateMyPlan = async (clientId, payload) => {
   return response.data;
 };
 
+/** Register demo user on backend. Creates client + demo entry in DB. Body: { name, companyName, email, password, numberOfPumps?, phone? }. Returns { ok, user, clientId, demoId }. */
+export const registerDemoApi = async (data) => {
+  const response = await api.post('auth/register-demo', {
+    name: data.name,
+    companyName: data.companyName,
+    email: data.email,
+    password: data.password,
+    numberOfPumps: data.numberOfPumps ?? 0,
+    phone: data.phone || undefined,
+  });
+  return response.data;
+};
+
 export const fetchPumpOverview = async (pumpId, at) => {
   const atParam = at ? `?at=${encodeURIComponent(at)}` : '';
   const response = await api.get(`pump/${pumpId}/overview${atParam}`);

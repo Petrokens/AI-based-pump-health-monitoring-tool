@@ -1,11 +1,18 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronRight, Activity, Package, Plus } from 'lucide-react';
 
 /**
- * Grid of pump cards for dashboard. Click a card to select that pump and view full details.
- * Optional onAddPump: when set, shows an "Add pump" button above the grid that navigates to pump setup.
+ * Grid of pump cards for dashboard. When onCardClick is set, each card links to that pump's dashboard page.
  */
-export default function PumpCards({ pumps, selectedPumpId, onSelectPump, onAddPump }) {
+export default function PumpCards({ pumps, selectedPumpId, onSelectPump, onAddPump, onCardClick }) {
+  const cardClass = (isSelected) =>
+    `text-left rounded-xl border-2 p-4 transition-all block w-full ${
+      isSelected
+        ? 'border-primary-500 bg-primary-500/10'
+        : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-primary-500/50 hover:bg-[var(--bg-card-hover)]'
+    }`;
+
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
@@ -25,17 +32,8 @@ export default function PumpCards({ pumps, selectedPumpId, onSelectPump, onAddPu
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {pumps.map((pump) => {
           const isSelected = pump.id === selectedPumpId;
-          return (
-            <button
-              key={pump.id}
-              type="button"
-              onClick={() => onSelectPump(pump.id)}
-              className={`text-left rounded-xl border-2 p-4 transition-all ${
-                isSelected
-                  ? 'border-primary-500 bg-primary-500/10'
-                  : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-primary-500/50 hover:bg-[var(--bg-card-hover)]'
-              }`}
-            >
+          const cardContent = (
+            <>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -71,7 +69,27 @@ export default function PumpCards({ pumps, selectedPumpId, onSelectPump, onAddPu
                   className={`w-5 h-5 shrink-0 ${isSelected ? 'text-primary-500' : 'text-[var(--text-tertiary)]'}`}
                 />
               </div>
-              <p className="text-xs text-[var(--text-tertiary)] mt-2">Click to view full details</p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-2">
+                {onCardClick ? 'Click to open pump dashboard' : 'Click to view full details'}
+              </p>
+            </>
+          );
+          return onCardClick ? (
+            <Link
+              key={pump.id}
+              to={`/app/pump/${encodeURIComponent(pump.id)}/dashboard`}
+              className={cardClass(isSelected)}
+            >
+              {cardContent}
+            </Link>
+          ) : (
+            <button
+              key={pump.id}
+              type="button"
+              onClick={() => onSelectPump?.(pump.id)}
+              className={cardClass(isSelected)}
+            >
+              {cardContent}
             </button>
           );
         })}
