@@ -1,15 +1,20 @@
 /**
  * Full-page dashboard for a single pump. Shown when user clicks a pump card from /app/dashboard.
+ * Single-screen report first; then "Open full dashboard" for detailed layers.
  * Route: /app/pump/:pumpId/dashboard
  */
-import React from 'react';
+import React, { useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Sidebar from '../common/Sidebar';
 import Header from '../common/Header';
 import PumpProductOverview from './PumpProductOverview';
+import PumpReportSingleScreen from './PumpReportSingleScreen';
 import UniversalPdMDashboard from './UniversalPdMDashboard';
 import DigitalTwinView from '../digital-twin/DigitalTwinView';
+import MLOutputs from '../MLOutputs';
+import RootCausePanel from '../RootCausePanel';
+import AIInsights from '../AIInsights';
 
 export default function PumpDashboardPage({
   pumps,
@@ -24,14 +29,26 @@ export default function PumpDashboardPage({
   const { pumpId: pumpIdParam } = useParams();
   const pumpId = pumpIdParam ? decodeURIComponent(pumpIdParam) : null;
   const navigate = useNavigate();
+  const fullDashboardRef = useRef(null);
   const pump = pumps.find((p) => p.id === pumpId);
   const currentPump = pumps.find((p) => p.id === selectedPump);
+
+  const scrollToFullDashboard = () => {
+    fullDashboardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="flex h-screen bg-[var(--bg-primary)]">
       <Sidebar
-        selectedView="dashboard"
-        onViewChange={(id) => (id === 'dashboard' ? navigate('/app/dashboard') : navigate(`/app/${id}`))}
+        selectedView={view === 'insights' ? 'insights' : 'dashboard'}
+        onViewChange={(id) => {
+          if (id === 'dashboard') navigate('/app/dashboard');
+          else if (pumpId && id === 'insights')
+            navigate(`/app/pump/${encodeURIComponent(pumpId)}/insights`);
+          else if (pumpId && id === 'digital-twin')
+            navigate(`/app/pump/${encodeURIComponent(pumpId)}/digital-twin`);
+          else navigate(`/app/${id}`);
+        }}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -69,6 +86,26 @@ export default function PumpDashboardPage({
                 <ArrowLeft className="w-4 h-4" /> Back to Dashboard
               </button>
             </div>
+          ) : view === 'insights' ? (
+            <>
+              <div className="mb-4 flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/app/pump/${encodeURIComponent(pumpId)}/dashboard`)}
+                  className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to pump dashboard
+                </button>
+                <h1 className="text-lg font-semibold text-[var(--text-primary)]">
+                  AI Insights · {pump?.name || pumpId}
+                </h1>
+              </div>
+              <div className="space-y-6">
+                <MLOutputs pumpId={pumpId} />
+                <RootCausePanel pumpId={pumpId} />
+                <AIInsights pumpId={pumpId} expanded={true} />
+              </div>
+            </>
           ) : view === 'digital-twin' ? (
             <DigitalTwinView
               pumps={pumps}
@@ -94,7 +131,11 @@ export default function PumpDashboardPage({
                 pumpId={pumpId}
                 onOpenDigitalTwin={() => navigate(`/app/pump/${encodeURIComponent(pumpId)}/digital-twin`)}
               />
-              <UniversalPdMDashboard
+              <div className="mb-6">
+                <PumpReportSingleScreen pumpId={pumpId} onOpenFullDashboard={scrollToFullDashboard} />
+              </div>
+              <div id="full-dashboard" ref={fullDashboardRef} className="scroll-mt-4">
+                <UniversalPdMDashboard
                 pumpId={pumpId}
                 pumps={pumps}
                 selectedPump={pumpId}
@@ -104,6 +145,7 @@ export default function PumpDashboardPage({
                 }}
                 hidePumpList
               />
+              </div>
             </>
           )}
         </main>

@@ -42,7 +42,12 @@ export default function PumpProductOverview({ pump, pumpId, onOpenDigitalTwin })
       icon: Box,
       onClick: () => (onOpenDigitalTwin ? onOpenDigitalTwin() : navigate(`/app/pump/${encodeURIComponent(pumpId)}/digital-twin`)),
     },
-    { id: 'insights', label: 'AI Insights', icon: Brain, path: '/app/insights' },
+    {
+      id: 'insights',
+      label: 'AI Insights',
+      icon: Brain,
+      onClick: () => navigate(`/app/pump/${encodeURIComponent(pumpId)}/insights`),
+    },
     { id: 'trends', label: 'Trend Explorer', icon: TrendingUp, path: '/app/trends' },
     { id: 'alerts', label: 'Alerts', icon: Bell, path: '/app/alerts' },
     { id: 'reports', label: 'Reports', icon: BarChart3, path: '/app/reports' },
@@ -139,7 +144,7 @@ export default function PumpProductOverview({ pump, pumpId, onOpenDigitalTwin })
         {/* Next step hint */}
         <div className="mt-4 rounded-xl bg-primary-500/10 border border-primary-500/20 px-4 py-2.5">
           <p className="text-sm text-[var(--text-primary)]">
-            <strong>Next:</strong> Scroll down for health details, performance curves, and AI failure diagnostics.
+            <strong>Single view:</strong> All report data (health, alarms, sensors, failures, recommendations) is shown in one screen below. Use &quot;Open full dashboard&quot; for detailed layers.
           </p>
         </div>
 
@@ -151,7 +156,7 @@ export default function PumpProductOverview({ pump, pumpId, onOpenDigitalTwin })
               <button
                 key={id}
                 type="button"
-                onClick={() => (path ? navigate(path) : onClick?.())}
+                onClick={() => (onClick ? onClick() : path ? navigate(path) : null)}
                 className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/60 px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] hover:border-primary-500/40 transition-colors"
               >
                 <Icon className="h-4 w-4 text-primary-500" />

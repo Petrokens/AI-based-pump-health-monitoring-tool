@@ -407,6 +407,37 @@ function ClientAppRoutes() {
           />
         }
       />
+      {/* Pump-specific AI Insights: from pump dashboard opens this pump's predictions */}
+      <Route
+        path="/app/pump/:pumpId/insights"
+        element={
+          <PumpDashboardPage
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+            view="insights"
+          />
+        }
+      />
+      <Route
+        path="pump/:pumpId/insights"
+        element={
+          <PumpDashboardPage
+            pumps={pumps}
+            selectedPump={selectedPump}
+            setSelectedPump={setSelectedPump}
+            loadPumps={loadPumps}
+            loading={loading}
+            error={error}
+            lastUpdate={lastUpdate}
+            view="insights"
+          />
+        }
+      />
       {/* Pump setup */}
       <Route path="/app/select-pump" element={selectPumpEl} />
       <Route path="select-pump" element={selectPumpEl} />

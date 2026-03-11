@@ -22,8 +22,21 @@ import threading
 from typing import Dict, List, Any, Optional, Tuple
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.covariance import EllipticEnvelope
 import warnings
 warnings.filterwarnings('ignore')
+
+# Extended AI: ensemble anomaly, RUL with CI, feature importance, validation
+from ai_models import (
+    validate_and_clip_sensor,
+    build_single_point_features,
+    AnomalyEnsemble,
+    rul_linear_and_exponential,
+    permutation_importance_pump,
+    tree_feature_importance,
+    FEATURE_COLS as AI_FEATURE_COLS,
+)
 
 # MongoDB (auth & admin)
 from db_mongo import (
@@ -188,15 +201,27 @@ def convert_to_python_type(value):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 
-# Load CSV files with optimizations
+# Pump master columns (used for empty schema and setup endpoints)
+PUMP_MASTER_COLS = [
+    "pump_id", "pump_type", "pump_type_detail", "manufacturer", "model", "installation_date",
+    "rated_power_kw", "rated_flow_m3h", "rated_head_m", "flow_range_min_m3h", "flow_range_max_m3h",
+    "head_range_min_m", "head_range_max_m", "rated_rpm", "seal_type", "bearing_type_de", "bearing_type_nde",
+    "impeller_type", "location", "criticality_level", "serial_number", "warranty_expiry", "last_overhaul",
+    "min_safe_flow_m3h", "max_safe_flow_m3h", "max_motor_load_kw", "max_suction_pressure_bar",
+    "efficiency_bep_percent", "npshr_m", "health_score",
+]
+
+# Load CSV files only if present; otherwise use empty DataFrames (client uploads add data later)
 PUMP_MASTER_PATH = os.path.join(DATA_DIR, 'pump_master.csv')
 PUMP_MASTER_LOCK = threading.Lock()
 PUMP_MASTER_MTIME = None
 
 def _load_pump_master() -> pd.DataFrame:
-    df = pd.read_csv(PUMP_MASTER_PATH)
-    df.columns = df.columns.str.strip()
-    return df
+    if os.path.isfile(PUMP_MASTER_PATH):
+        df = pd.read_csv(PUMP_MASTER_PATH)
+        df.columns = df.columns.str.strip()
+        return df
+    return pd.DataFrame(columns=PUMP_MASTER_COLS)
 
 def _refresh_pump_master_if_changed():
     """Reload pump master when the CSV file is modified; refresh runtime state and cache."""
@@ -239,17 +264,19 @@ def _refresh_pump_master_if_changed():
         logger.info("Reloaded pump_master.csv; pumps: %s", list(pump_master_df['pump_id'].values))
         return True
 
-try:
-    logger.info("Loading CSV data files...")
+# Optional CSV loading: if files exist load them; otherwise start with empty DataFrames (clients upload data)
+OPERATION_LOG_COLS = ['timestamp', 'pump_id', 'flow_m3h', 'discharge_pressure_bar', 'suction_pressure_bar', 'rpm', 'motor_power_kw', 'vibration_mm_s', 'bearing_temp_c', 'displacement_um', 'status']
+MAINTENANCE_LOG_COLS = ['date', 'pump_id', 'action', 'component', 'notes', 'downtime_hours']
 
-    # Load pump master (small file, load all)
-    pump_master_df = _load_pump_master()
-    PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
+logger.info("Loading CSV data files (optional; missing files use empty data from client uploads)...")
 
-    # Load operation log with optimizations - use dtype to reduce memory and speed
-    logger.info("Loading operation logs (this may take a moment for large files)...")
+pump_master_df = _load_pump_master()
+PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH) if os.path.isfile(PUMP_MASTER_PATH) else None
+
+op_log_path = os.path.join(DATA_DIR, 'operation_log.csv')
+if os.path.isfile(op_log_path):
     operation_log_df = pd.read_csv(
-        os.path.join(DATA_DIR, 'operation_log.csv'),
+        op_log_path,
         dtype={
             'pump_id': 'category',
             'flow_m3h': 'float32',
@@ -266,27 +293,36 @@ try:
         infer_datetime_format=True
     )
     operation_log_df.columns = operation_log_df.columns.str.strip()
-    
-    # Sort by timestamp once and cache (data is already sorted, but ensure consistency)
     operation_log_df = operation_log_df.sort_values('timestamp').reset_index(drop=True)
-    
-    # Load maintenance log
-    maintenance_log_df = pd.read_csv(os.path.join(DATA_DIR, 'maintenance_log.csv'))
+    logger.info("Loaded operation_log.csv: %s rows", len(operation_log_df))
+else:
+    operation_log_df = pd.DataFrame(columns=OPERATION_LOG_COLS)
+    logger.info("No operation_log.csv; using empty DataFrame (upload via /api/setup/operation-log)")
+
+maint_path = os.path.join(DATA_DIR, 'maintenance_log.csv')
+if os.path.isfile(maint_path):
+    maintenance_log_df = pd.read_csv(maint_path)
     maintenance_log_df.columns = maintenance_log_df.columns.str.strip()
     maintenance_log_df['date'] = pd.to_datetime(maintenance_log_df['date'])
-    
-    # Load failure data
-    failure_data_df = pd.read_csv(os.path.join(DATA_DIR, 'raw', 'failure_data.csv'))
+    logger.info("Loaded maintenance_log.csv: %s rows", len(maintenance_log_df))
+else:
+    maintenance_log_df = pd.DataFrame(columns=MAINTENANCE_LOG_COLS)
+    logger.info("No maintenance_log.csv; using empty DataFrame (upload via /api/setup/maintenance-log)")
+
+failure_data_path = os.path.join(DATA_DIR, 'raw', 'failure_data.csv')
+if os.path.isfile(failure_data_path):
+    failure_data_df = pd.read_csv(failure_data_path)
     failure_data_df.columns = failure_data_df.columns.str.strip()
     failure_data_df['failure_date'] = pd.to_datetime(failure_data_df['failure_date'])
-    
-    logger.info(
-        "Successfully loaded CSV data - operation_logs=%s maintenance=%s failure=%s pumps=%s",
-        len(operation_log_df), len(maintenance_log_df), len(failure_data_df), list(pump_master_df['pump_id'].values),
-    )
-except Exception as e:
-    logger.critical("Could not load CSV files: %s", e)
-    exit(1)
+    logger.info("Loaded failure_data.csv: %s rows", len(failure_data_df))
+else:
+    failure_data_df = pd.DataFrame(columns=['failure_date', 'pump_id', 'failure_type', 'description'])
+    logger.info("No failure_data.csv; using empty DataFrame")
+
+logger.info(
+    "Data ready - operation_logs=%s maintenance=%s failure=%s pumps=%s",
+    len(operation_log_df), len(maintenance_log_df), len(failure_data_df), list(pump_master_df['pump_id'].values) if 'pump_id' in pump_master_df.columns and len(pump_master_df) else [],
+)
 
 # ==================== Runtime State Tracking ====================
 
@@ -343,8 +379,9 @@ def _maybe_reload_pump_master():
         logger.warning("Pump master reload skipped: %s", exc)
 
 
-for pump_id_value in pump_master_df["pump_id"].values:
-    _ensure_runtime_entry(str(pump_id_value))
+if "pump_id" in pump_master_df.columns and len(pump_master_df) > 0:
+    for pump_id_value in pump_master_df["pump_id"].values:
+        _ensure_runtime_entry(str(pump_id_value))
 
 _write_runtime_state_file({k: dict(v) for k, v in runtime_state.items()})
 
@@ -539,6 +576,8 @@ class PredictiveMaintenanceAI:
         self.anomaly_detectors = {}
         self.scalers = {}
         self.baseline_stats = {}
+        self.anomaly_ensemble = AnomalyEnsemble(use_robust_scaler=False)
+        self._training_data = {}  # pump_id -> X array for feature importance
         self.train_models()
     
     def train_models(self):
@@ -613,53 +652,41 @@ class PredictiveMaintenanceAI:
                 )
                 iso_forest.fit(scaled_features)
                 self.anomaly_detectors[pump_id] = iso_forest
-                
+                # Train multi-model ensemble (IF + LOF + Elliptic Envelope)
+                X_raw = pump_data_clean[feature_cols].values
+                self._training_data[pump_id] = X_raw
+                if self.anomaly_ensemble.train(pump_id, X_raw):
+                    logger.info("Trained ensemble (IF+LOF+EE) for %s", pump_id)
+
                 logger.info("Trained model for %s on %s samples", pump_id, len(pump_data_clean))
             else:
                 logger.warning("Insufficient data for %s", pump_id)
     
     def predict_anomaly_score(self, pump_id: str, sensor_data: Dict) -> Dict[str, Any]:
-        """Predict anomaly score using trained model"""
+        """Predict anomaly score using ensemble (IF + LOF + Elliptic) when available, else single IF."""
+        sensor_data = validate_and_clip_sensor(sensor_data)
+        X = build_single_point_features(sensor_data)
+        # Prefer ensemble for more accurate combined score
+        if pump_id in self.anomaly_ensemble.detectors:
+            out = self.anomaly_ensemble.predict(pump_id, X)
+            return {
+                "anomaly_score": out["anomaly_score"],
+                "is_anomaly": out["is_anomaly"],
+                "confidence": out["confidence"],
+                "models": out.get("models", {}),
+            }
+        # Fallback: single Isolation Forest
         if pump_id not in self.anomaly_detectors:
-            return {"anomaly_score": 0, "is_anomaly": False, "confidence": 0}
-        
-        # Calculate derived features
-        head_m = (sensor_data['discharge_pressure_bar'] - sensor_data['suction_pressure_bar']) * 10.2
-        hydraulic_power = (sensor_data['flow_m3h'] * head_m) / 367
-        motor_power = sensor_data['motor_power_kw']
-        motor_power_safe = motor_power if motor_power != 0 else 0.1  # prevent zero-division
-        efficiency = (hydraulic_power / motor_power_safe) * 100
-        pressure_ratio = sensor_data['discharge_pressure_bar'] / (sensor_data['suction_pressure_bar'] + 0.1)
-        specific_energy = motor_power_safe / (sensor_data['flow_m3h'] + 0.1)
-        
-        # Prepare feature vector
-        features = np.array([[
-            sensor_data['flow_m3h'],
-            sensor_data['discharge_pressure_bar'],
-            sensor_data['suction_pressure_bar'],
-            sensor_data['motor_power_kw'],
-            head_m,
-            efficiency,
-            pressure_ratio,
-            specific_energy,
-            sensor_data['flow_m3h'],  # rolling mean (use current for single point)
-            0  # rolling std
-        ]])
-        
-        # Scale features
-        scaled_features = self.scalers[pump_id].transform(features)
-        
-        # Predict anomaly
-        anomaly_label = self.anomaly_detectors[pump_id].predict(scaled_features)[0]
-        anomaly_score = self.anomaly_detectors[pump_id].score_samples(scaled_features)[0]
-        
-        # Convert to probability (0-1)
-        anomaly_prob = 1 / (1 + np.exp(anomaly_score))
-        
+            return {"anomaly_score": 0, "is_anomaly": False, "confidence": 0, "models": {}}
+        scaled = self.scalers[pump_id].transform(X)
+        anomaly_label = self.anomaly_detectors[pump_id].predict(scaled)[0]
+        raw_score = self.anomaly_detectors[pump_id].score_samples(scaled)[0]
+        anomaly_prob = 1 / (1 + np.exp(raw_score))
         return {
             "anomaly_score": float(anomaly_prob),
             "is_anomaly": anomaly_label == -1,
-            "confidence": float(1 - anomaly_prob) if anomaly_label == 1 else float(anomaly_prob)
+            "confidence": float(1 - anomaly_prob) if anomaly_label == 1 else float(anomaly_prob),
+            "models": {},
         }
     
     def calculate_health_index(self, pump_id: str, sensor_data: Dict, anomaly_result: Dict) -> float:
@@ -696,56 +723,33 @@ class PredictiveMaintenanceAI:
         
         return max(0, min(100, health_score))
     
-    def predict_rul(self, pump_id: str, health_index: float, sensor_data: Dict) -> int:
-        """Predict Remaining Useful Life using degradation rate analysis (optimized)"""
-        
-        # Get historical degradation trend - limit to recent data for speed
+    def predict_rul(self, pump_id: str, health_index: float, sensor_data: Dict) -> Dict[str, Any]:
+        """Predict RUL with linear + exponential degradation and confidence interval. Returns dict with rul_hours, rul_lower, rul_upper."""
         pump_ops = operation_log_df[operation_log_df['pump_id'] == pump_id].copy()
-        
         if len(pump_ops) < 3:
-            # Fallback: Simple health-based RUL
             if health_index > 80:
-                return np.random.randint(800, 1500)
+                h = np.random.randint(800, 1500)
             elif health_index > 60:
-                return np.random.randint(200, 500)
+                h = np.random.randint(200, 500)
             else:
-                return np.random.randint(24, 150)
-        
-        # Limit to last 5000 rows for faster processing (data already sorted by timestamp)
+                h = np.random.randint(24, 150)
+            spread = max(50, int(h * 0.3))
+            h = self.clamp_rul_hours(int(h))
+            return {"rul_hours": h, "rul_lower": self.clamp_rul_hours(max(24, h - spread)), "rul_upper": self.clamp_rul_hours(min(PredictiveMaintenanceAI.MAX_RUL_HOURS, h + spread)), "method": "health_fallback"}
         if len(pump_ops) > 5000:
             pump_ops = pump_ops.tail(5000)
-        
-        # Calculate efficiency trend
         pump_ops = FeatureEngineer.calculate_derived_features(pump_ops)
-        # Data already sorted, no need to sort again
-        
-        # Fit linear degradation model
-        if len(pump_ops) >= 3:
-            time_index = np.arange(len(pump_ops))
-            efficiency_values = pump_ops['efficiency'].values
-            
-            # Simple linear regression
-            coefficients = np.polyfit(time_index, efficiency_values, 1)
-            degradation_rate = abs(coefficients[0])  # % efficiency loss per reading
-            
-            # Estimate time to critical threshold (efficiency < 50%)
-            current_efficiency = efficiency_values[-1]
-            critical_threshold = 50.0
-            
-            if degradation_rate > 0:
-                readings_to_failure = (current_efficiency - critical_threshold) / degradation_rate
-                # Assuming 5-minute intervals, convert to hours
-                hours_to_failure = max(24, int(readings_to_failure * 5 / 60))
-            else:
-                hours_to_failure = 2000  # No degradation detected
-            
-            # Adjust based on health index
-            rul_factor = health_index / 100
-            adjusted_rul = int(hours_to_failure * rul_factor)
-            
-            return max(24, min(2000, adjusted_rul))
-        
-        return 500
+        time_index = np.arange(len(pump_ops))
+        efficiency_values = pump_ops['efficiency'].values
+        result = rul_linear_and_exponential(time_index, efficiency_values, critical_threshold=50.0, interval_minutes=5.0)
+        rul_hours = result["rul_hours"]
+        rul_factor = health_index / 100
+        adjusted = int(rul_hours * rul_factor)
+        adjusted = max(24, min(2000, adjusted))
+        result["rul_hours"] = self.clamp_rul_hours(adjusted)
+        result["rul_lower"] = self.clamp_rul_hours(max(24, int(result["rul_lower"] * rul_factor)))
+        result["rul_upper"] = self.clamp_rul_hours(min(PredictiveMaintenanceAI.MAX_RUL_HOURS, int(result["rul_upper"] * rul_factor)))
+        return result
 
     @staticmethod
     def clamp_rul_hours(rul_hours: int) -> int:
@@ -836,7 +840,7 @@ class PredictiveMaintenanceAI:
 
 # Initialize AI models
 print("\n" + "="*60)
-print("🤖 Initializing AI/ML Predictive Models...")
+print("Initializing AI/ML Predictive Models...")
 print("="*60)
 ai_predictor = PredictiveMaintenanceAI()
 print("="*60 + "\n")
@@ -1154,16 +1158,6 @@ def _read_uploaded_table(file_storage):
     return df
 
 
-PUMP_MASTER_COLS = [
-    "pump_id", "pump_type", "pump_type_detail", "manufacturer", "model", "installation_date",
-    "rated_power_kw", "rated_flow_m3h", "rated_head_m", "flow_range_min_m3h", "flow_range_max_m3h",
-    "head_range_min_m", "head_range_max_m", "rated_rpm", "seal_type", "bearing_type_de", "bearing_type_nde",
-    "impeller_type", "location", "criticality_level", "serial_number", "warranty_expiry", "last_overhaul",
-    "min_safe_flow_m3h", "max_safe_flow_m3h", "max_motor_load_kw", "max_suction_pressure_bar",
-    "efficiency_bep_percent", "npshr_m", "health_score",
-]
-
-
 @app.route('/api/setup/pump-master', methods=['OPTIONS', 'POST'])
 def setup_pump_master():
     """Append one pump master row from JSON body (all pump_master.csv columns)."""
@@ -1178,6 +1172,7 @@ def setup_pump_master():
         new_row_df = pd.DataFrame([row], columns=PUMP_MASTER_COLS)
         with PUMP_MASTER_LOCK:
             pump_master_df = pd.concat([pump_master_df, new_row_df], ignore_index=True)
+            os.makedirs(DATA_DIR, exist_ok=True)
             pump_master_df.to_csv(PUMP_MASTER_PATH, index=False)
             PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
         with PUMP_CACHE_LOCK:
@@ -1190,22 +1185,26 @@ def setup_pump_master():
 
 
 def _normalize_df_columns_to_master(df):
-    """Map dataframe columns to PUMP_MASTER_COLS (strip, case-insensitive match). Returns (df, missing_list)."""
+    """Map dataframe columns to PUMP_MASTER_COLS (strip, case-insensitive, spaces as underscores). Allows partial columns; missing filled with None. Returns (df with all PUMP_MASTER_COLS, missing_list)."""
     df = df.copy()
     df.columns = [str(c).strip() for c in df.columns]
-    col_map = {}
-    available_lower = {str(c).strip().lower(): c for c in df.columns}
+
+    def norm(s):
+        return (s or "").lower().replace(" ", "_").replace("-", "_")
+
+    available_norm = {norm(c): c for c in df.columns}
+    result = {}
     missing = []
     for expected in PUMP_MASTER_COLS:
-        key = expected.lower()
-        if key in available_lower:
-            col_map[available_lower[key]] = expected
+        key = norm(expected)
+        if key in available_norm:
+            src_col = available_norm[key]
+            result[expected] = df[src_col].values if len(df) > 0 else []
         else:
             missing.append(expected)
-    if missing:
-        return None, missing
-    df = df.rename(columns=col_map)
-    return df[PUMP_MASTER_COLS], []
+            result[expected] = [None] * len(df) if len(df) > 0 else []
+    out = pd.DataFrame(result, columns=PUMP_MASTER_COLS)
+    return out, missing
 
 
 @app.route('/api/setup/pump-master/upload', methods=['OPTIONS', 'POST'])
@@ -1224,14 +1223,9 @@ def setup_pump_master_upload():
             )
         df = _read_uploaded_table(f)
         df.columns = [str(c).strip() for c in df.columns]
-        df_normalized, missing = _normalize_df_columns_to_master(df)
-        if df_normalized is None:
-            return api_error(
-                f"Missing columns: {missing}. File must include: pump_id, pump_type, pump_type_detail, manufacturer, model, ...",
-                400,
-            )
-        if len(df_normalized) == 0:
+        if len(df) == 0:
             return api_error("File has no data rows. Need at least one row after the header.", 400)
+        df_normalized, _ = _normalize_df_columns_to_master(df)
         row_raw = df_normalized.iloc[0].to_dict()
         row = {}
         for c in PUMP_MASTER_COLS:
@@ -1245,8 +1239,13 @@ def setup_pump_master_upload():
         new_row_df = pd.DataFrame([row], columns=PUMP_MASTER_COLS)
         with PUMP_MASTER_LOCK:
             pump_master_df = pd.concat([pump_master_df, new_row_df], ignore_index=True)
-            pump_master_df.to_csv(PUMP_MASTER_PATH, index=False)
-            PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
+            try:
+                os.makedirs(DATA_DIR, exist_ok=True)
+                pump_master_df.to_csv(PUMP_MASTER_PATH, index=False)
+                PUMP_MASTER_MTIME = os.path.getmtime(PUMP_MASTER_PATH)
+            except OSError as e:
+                logger.exception("Could not write pump_master.csv")
+                return api_error(f"Could not save file: {e}", 500)
         with PUMP_CACHE_LOCK:
             PUMP_LIST_CACHE["data"] = None
             PUMP_LIST_CACHE["timestamp"] = datetime.min
@@ -1368,7 +1367,8 @@ def get_pumps():
             health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
             master_health = convert_to_python_type(pump_row.get('health_score'))
             display_health = float(master_health) if master_health is not None else health_index
-            rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+            rul_result = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+            rul_hours_val = rul_result.get("rul_hours", 500) if isinstance(rul_result, dict) else rul_result
             if display_health > 80:
                 status = "normal"
             elif display_health > 60:
@@ -1382,7 +1382,7 @@ def get_pumps():
                 "name": f"{pump_row.get('model', 'Unknown')} - {pump_id}",
                 "status": str(status),
                 "health_index": float(round(convert_to_python_type(display_health) or 85.0, 1)),
-                "rul_hours": int(convert_to_python_type(rul) or 500),
+                "rul_hours": int(convert_to_python_type(rul_hours_val) or 500),
                 "location": "Pump House - Unit 1",
                 "model": str(pump_row.get('model', 'Unknown')),
                 "vendor": str(pump_row.get('vendor') or pump_row.get('manufacturer', 'Unknown')),
@@ -1508,8 +1508,8 @@ def get_pump_kpis(pump_id):
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
         master_health = convert_to_python_type(pump_info.get("health_score"))
         display_health = float(master_health) if master_health is not None else health_index
-        raw_rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
-        rul = ai_predictor.clamp_rul_hours(raw_rul)
+        rul_result = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul = rul_result.get("rul_hours", 500) if isinstance(rul_result, dict) else rul_result
         
         # Calculate metrics
         baseline = ai_predictor.baseline_stats.get(pump_id, {})
@@ -1746,7 +1746,14 @@ def get_demo_simulation(pump_id):
 def get_anomalies(pump_id):
     """Get AI-detected anomalies using ML models"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        pm = pump_master_df[pump_master_df["pump_id"] == pump_id]
+        if pm.empty:
+            return jsonify({"error": f"Pump {pump_id} not found"}), 404
+        pump_info = pm.iloc[0]
+        try:
+            latest_data = RealDataProvider.get_latest_reading(pump_id)
+        except (ValueError, KeyError):
+            latest_data = _synthetic_latest_reading(pump_id, pump_info)
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
         
@@ -1894,8 +1901,10 @@ def get_pump_overview(pump_id):
 
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
-        raw_rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
-        rul = ai_predictor.clamp_rul_hours(raw_rul)
+        rul_result = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul = rul_result.get("rul_hours", 500) if isinstance(rul_result, dict) else rul_result
+        rul_lower = rul_result.get("rul_lower", int(rul * 0.7)) if isinstance(rul_result, dict) else int(rul * 0.7)
+        rul_upper = rul_result.get("rul_upper", int(rul * 1.2)) if isinstance(rul_result, dict) else int(rul * 1.2)
         master_health = convert_to_python_type(pump_info.get("health_score"))
         display_health = float(master_health) if master_health is not None else health_index
         specs = {
@@ -1965,6 +1974,8 @@ def get_pump_overview(pump_id):
             "location": f"Pump House - {pump_id}",
             "health_score": float(round(display_health, 1)),
             "rul_hours": int(rul),
+            "rul_lower_hours": int(rul_lower),
+            "rul_upper_hours": int(rul_upper),
             "rul_days": int(rul / 24),
             "rul_months": float(round(rul / 720, 1)),
             "operational_status": op_status,
@@ -2292,10 +2303,20 @@ def get_maintenance_metrics(pump_id):
 def get_ml_outputs(pump_id):
     """Get ML model outputs: anomaly score, failure mode probabilities, RUL distribution, feature importance"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        pm = pump_master_df[pump_master_df["pump_id"] == pump_id]
+        if pm.empty:
+            return jsonify({"error": f"Pump {pump_id} not found"}), 404
+        pump_info = pm.iloc[0]
+        try:
+            latest_data = RealDataProvider.get_latest_reading(pump_id)
+        except (ValueError, KeyError):
+            latest_data = _synthetic_latest_reading(pump_id, pump_info)
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
-        rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul_result = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul = rul_result.get("rul_hours", 500) if isinstance(rul_result, dict) else rul_result
+        rul_lower = rul_result.get("rul_lower", int(rul * 0.7)) if isinstance(rul_result, dict) else int(rul * 0.7)
+        rul_upper = rul_result.get("rul_upper", int(rul * 1.2)) if isinstance(rul_result, dict) else int(rul * 1.2)
         
         # Failure mode probabilities
         failure_modes = ai_predictor.detect_failure_modes(pump_id, latest_data, health_index)
@@ -2330,49 +2351,57 @@ def get_ml_outputs(pump_id):
         if total_prob > 0:
             failure_mode_probs = {k: v / total_prob for k, v in failure_mode_probs.items()}
         
-        # RUL distribution (simplified - in production would use probabilistic model)
-        rul_best = ai_predictor.clamp_rul_hours(int(rul * 1.2))
-        rul_median = ai_predictor.clamp_rul_hours(int(rul))
-        rul_worst = ai_predictor.clamp_rul_hours(int(rul * 0.7))
+        # RUL distribution from linear+exponential model with confidence interval
+        rul_best = ai_predictor.clamp_rul_hours(rul_upper)
+        rul_median = ai_predictor.clamp_rul_hours(rul)
+        rul_worst = ai_predictor.clamp_rul_hours(rul_lower)
         
-        # Feature importance (simplified SHAP-like explanation)
-        baseline = ai_predictor.baseline_stats.get(pump_id, {})
+        # Feature importance: ML-based (permutation or tree) when training data available
+        feature_names_display = ["Flow", "Discharge P", "Suction P", "Motor Power", "Head", "Efficiency", "Pressure Ratio", "Specific Energy", "Flow Rolling Mean", "Flow Rolling Std"]
         feature_importance = []
-        
-        if baseline:
-            # Flow deviation
-            flow_dev = abs(latest_data['flow_m3h'] - baseline.get('flow_mean', latest_data['flow_m3h'])) / baseline.get('flow_mean', 1)
-            feature_importance.append({"feature": "Flow Deviation", "importance": float(round(flow_dev * 100, 2))})
-            
-            # Efficiency
+        if pump_id in getattr(ai_predictor, '_training_data', {}) and pump_id in ai_predictor.anomaly_detectors:
+            try:
+                X_sample = ai_predictor._training_data[pump_id]
+                if len(X_sample) >= 10:
+                    model = ai_predictor.anomaly_detectors[pump_id]
+                    scaler = ai_predictor.scalers[pump_id]
+                    feature_importance = permutation_importance_pump(model, scaler, X_sample[:200], feature_names_display, n_repeats=3)
+            except Exception as e:
+                logger.debug("ML feature importance failed: %s", e)
+        if not feature_importance and ai_predictor.baseline_stats.get(pump_id):
+            baseline = ai_predictor.baseline_stats[pump_id]
+            flow_dev = abs(latest_data['flow_m3h'] - baseline.get('flow_mean', latest_data['flow_m3h'])) / (baseline.get('flow_mean', 1) or 1)
             head_m = (latest_data['discharge_pressure_bar'] - latest_data['suction_pressure_bar']) * 10.2
             hydraulic_power = (latest_data['flow_m3h'] * head_m) / 367
-            efficiency = (hydraulic_power / latest_data['motor_power_kw']) * 100
-            eff_dev = abs(efficiency - baseline.get('efficiency_mean', efficiency)) / baseline.get('efficiency_mean', 1)
-            feature_importance.append({"feature": "Efficiency Deviation", "importance": float(round(eff_dev * 100, 2))})
-            
-            # Power consumption
-            power_dev = abs(latest_data['motor_power_kw'] - baseline.get('power_mean', latest_data['motor_power_kw'])) / baseline.get('power_mean', 1)
-            feature_importance.append({"feature": "Power Consumption", "importance": float(round(power_dev * 100, 2))})
-        
-        # Sort by importance
-        feature_importance.sort(key=lambda x: x['importance'], reverse=True)
+            efficiency = (hydraulic_power / (latest_data['motor_power_kw'] or 0.1)) * 100
+            eff_dev = abs(efficiency - baseline.get('efficiency_mean', efficiency)) / (baseline.get('efficiency_mean', 1) or 1)
+            power_dev = abs(latest_data['motor_power_kw'] - baseline.get('power_mean', latest_data['motor_power_kw'])) / (baseline.get('power_mean', 1) or 1)
+            feature_importance = [
+                {"feature": "Flow Deviation", "importance": float(round(flow_dev * 100, 2))},
+                {"feature": "Efficiency Deviation", "importance": float(round(eff_dev * 100, 2))},
+                {"feature": "Power Consumption", "importance": float(round(power_dev * 100, 2))},
+            ]
+            feature_importance.sort(key=lambda x: x['importance'], reverse=True)
         
         return jsonify({
             "pump_id": str(pump_id),
             "anomaly_score": float(round(anomaly_result['anomaly_score'], 3)),
             "anomaly_threshold": 0.7,
             "is_anomaly": bool(anomaly_result['is_anomaly']),
+            "anomaly_models": anomaly_result.get("models", {}),
             "failure_mode_probabilities": {k: float(round(v, 3)) for k, v in failure_mode_probs.items()},
             "rul_distribution": {
                 "best_case_hours": rul_best,
                 "median_hours": rul_median,
                 "worst_case_hours": rul_worst,
+                "rul_lower_hours": rul_lower,
+                "rul_upper_hours": rul_upper,
                 "best_case_months": float(round(rul_best / 720, 1)),
                 "median_months": float(round(rul_median / 720, 1)),
                 "worst_case_months": float(round(rul_worst / 720, 1))
             },
-            "feature_importance": feature_importance[:5],  # Top 5
+            "rul_method": rul_result.get("method", "linear") if isinstance(rul_result, dict) else "linear",
+            "feature_importance": feature_importance[:10],
             "health_index": float(round(health_index, 1)),
             "timestamp": datetime.now().isoformat()
         })
@@ -2383,7 +2412,14 @@ def get_ml_outputs(pump_id):
 def get_root_cause(pump_id):
     """Get root cause analysis and diagnostics"""
     try:
-        latest_data = RealDataProvider.get_latest_reading(pump_id)
+        pm = pump_master_df[pump_master_df["pump_id"] == pump_id]
+        if pm.empty:
+            return jsonify({"error": f"Pump {pump_id} not found"}), 404
+        pump_info = pm.iloc[0]
+        try:
+            latest_data = RealDataProvider.get_latest_reading(pump_id)
+        except (ValueError, KeyError):
+            latest_data = _synthetic_latest_reading(pump_id, pump_info)
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
         anomalies = ai_predictor.detect_failure_modes(pump_id, latest_data, health_index)
@@ -2463,7 +2499,8 @@ def get_alerts(pump_id):
         anomaly_result = ai_predictor.predict_anomaly_score(pump_id, latest_data)
         health_index = ai_predictor.calculate_health_index(pump_id, latest_data, anomaly_result)
         anomalies = ai_predictor.detect_failure_modes(pump_id, latest_data, health_index)
-        rul = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul_result = ai_predictor.predict_rul(pump_id, health_index, latest_data)
+        rul = rul_result.get("rul_hours", 500) if isinstance(rul_result, dict) else rul_result
         
         alerts = []
         
