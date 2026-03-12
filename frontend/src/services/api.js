@@ -20,8 +20,9 @@ const normalizeApiBaseUrl = (url) => {
 
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  // Default to local backend; set VITE_API_BASE_URL to override (e.g. Render URL)
-  return normalizeApiBaseUrl(envUrl || 'http://127.0.0.1:5000');
+  // Production default: Render backend; dev/local override with VITE_API_BASE_URL
+  const defaultUrl = import.meta.env.DEV ? 'http://127.0.0.1:5000' : 'https://ai-based-pump-health-monitoring-tool.onrender.com';
+  return normalizeApiBaseUrl(envUrl || defaultUrl);
 };
 
 // Check localStorage for custom API URL (from Settings)
